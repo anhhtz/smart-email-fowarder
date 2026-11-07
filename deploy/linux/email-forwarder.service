@@ -1,0 +1,17 @@
+[Unit]
+Description=Smart Email Forwarder Service
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/smart-email-forwarder
+ExecStart=/opt/smart-email-forwarder/smart-email-forwarder --port 8080 --host 0.0.0.0
+Restart=always
+RestartSec=5s
+LimitNOFILE=65536
+
+# Environment variables if needed
+Environment=RUST_LOG=smart_email_forwarder=info,tower_http=info
+
+[Install]
+WantedBy=multi-user.target

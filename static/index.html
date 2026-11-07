@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Email Forwarder</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+            <polyline points="22,6 12,13 2,6"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h2>Email Forwarder</h2>
+          <span class="sub">MS Exchange &rarr; Gmail</span>
+        </div>
+      </div>
+
+      <nav class="nav-menu">
+        <button class="nav-item active" data-tab="dashboard">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          <span>Dashboard</span>
+        </button>
+        <button class="nav-item" data-tab="exchange">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <span>Exchange Mailbox</span>
+        </button>
+        <button class="nav-item" data-tab="forwarding">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 17 20 12 15 7"/><path d="M4 18v-2a4 4 0 0 1 4-4h12"/></svg>
+          <span>Forwarding Rules</span>
+        </button>
+        <button class="nav-item" data-tab="smtp">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          <span>Exchange Relay</span>
+        </button>
+        <button class="nav-item" data-tab="logs">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          <span>Activity Logs</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="system-indicator">
+          <span class="status-dot active" id="sidebarStatusDot"></span>
+          <span id="sidebarStatusText">Service Active</span>
+        </div>
+        <div class="version">v0.1.0 • Offline Ready</div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Top Bar -->
+      <header class="topbar">
+        <div class="page-title">
+          <h1 id="pageHeading">Dashboard</h1>
+          <p id="pageSubheading">System health, forward statistics, and recent activity.</p>
+        </div>
+        <div class="topbar-actions">
+          <button class="btn btn-secondary" id="btnTogglePoller">
+            <span class="icon">&#10074;&#10074;</span> <span id="togglePollerLabel">Pause Poller</span>
+          </button>
+          <button class="btn btn-primary" id="btnSyncNow">
+            <svg class="icon spin-on-click" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            <span>Sync Now</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Alert Notification Area -->
+      <div id="alertBox" class="alert-box hidden"></div>
+
+      <!-- Tab Content: Dashboard -->
+      <section id="tab-dashboard" class="tab-pane active">
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-title">Forward Status</span>
+              <span class="badge badge-success" id="statBadgeStatus">Active</span>
+            </div>
+            <div class="stat-value" id="statStatus">Running</div>
+            <div class="stat-footer">Next poll: <strong id="statNextPoll">In 30s</strong></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-title">Total Forwarded</span>
+              <span class="stat-icon icon-success">&#10003;</span>
+            </div>
+            <div class="stat-value" id="statTotalForwarded">0</div>
+            <div class="stat-footer">Delivered to Gmail accounts</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-title">Failed Deliveries</span>
+              <span class="stat-icon icon-danger">&#10007;</span>
+            </div>
+            <div class="stat-value text-danger" id="statTotalFailed">0</div>
+            <div class="stat-footer">Review logs for error details</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-title">Poll Interval</span>
+              <span class="stat-icon">&#9201;</span>
+            </div>
+            <div class="stat-value" id="statInterval">1 min</div>
+            <div class="stat-footer">Last run: <span id="statLastPoll">Never</span></div>
+          </div>
+        </div>
+
+        <!-- Recent Forwarded Emails Table -->
+        <div class="content-card">
+          <div class="card-header flex-between">
+            <div>
+              <h3>Recent Forward Activity</h3>
+              <p class="card-desc">History of emails retrieved from Exchange and forwarded.</p>
+            </div>
+            <button class="btn btn-sm btn-outline" id="btnRefreshActivity">Refresh</button>
+          </div>
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Original Sender</th>
+                  <th>Subject</th>
+                  <th>Forwarded To</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="activityTableBody">
+                <tr>
+                  <td colspan="6" class="text-center empty-state">No email forwarding events recorded yet.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab Content: Exchange Mailbox -->
+      <section id="tab-exchange" class="tab-pane">
+        <div class="content-card">
+          <div class="card-header">
+            <h3>Internal Exchange Mailbox Connection</h3>
+            <p class="card-desc">Configure the IMAP connection to access your internal MS Exchange mailbox.</p>
+          </div>
+          <form id="formExchange" class="form-grid">
+            <div class="form-group col-6">
+              <label for="exchangeHost">Exchange Server Host / IP</label>
+              <input type="text" id="exchangeHost" name="host" placeholder="mail.company.local or 192.168.1.10" required>
+              <small>FQDN or IP address of the Exchange Server on the local network.</small>
+            </div>
+            <div class="form-group col-3">
+              <label for="exchangePort">IMAP Port</label>
+              <input type="number" id="exchangePort" name="port" value="993" required>
+              <small>993 for SSL/TLS, 143 for STARTTLS/plain.</small>
+            </div>
+            <div class="form-group col-3">
+              <label for="exchangeSecurity">Encryption</label>
+              <select id="exchangeSecurity" name="security">
+                <option value="ssl">SSL / TLS (Port 993)</option>
+                <option value="starttls">STARTTLS (Port 143)</option>
+                <option value="plain">Plain / None (Port 143)</option>
+              </select>
+            </div>
+
+            <div class="form-group col-6">
+              <label for="exchangeUsername">Username / Domain Account</label>
+              <input type="text" id="exchangeUsername" name="username" placeholder="domain\username or user@company.com" required>
+            </div>
+            <div class="form-group col-6">
+              <label for="exchangePassword">Mailbox Password</label>
+              <input type="password" id="exchangePassword" name="password" placeholder="••••••••">
+              <small>Leave blank to keep existing stored password.</small>
+            </div>
+
+            <div class="form-group col-4">
+              <label for="exchangeFolder">Mailbox Folder</label>
+              <input type="text" id="exchangeFolder" name="folder" value="INBOX" required>
+              <small>Default is INBOX.</small>
+            </div>
+            <div class="form-group col-4 flex-center-vert">
+              <label class="toggle-control">
+                <input type="checkbox" id="exchangeMarkRead" name="mark_as_read" checked>
+                <span class="toggle-slider"></span>
+                <span class="toggle-label">Mark as Read after forward</span>
+              </label>
+            </div>
+            <div class="form-group col-4 flex-center-vert">
+              <label class="toggle-control">
+                <input type="checkbox" id="exchangeAllowSelfSigned" name="allow_self_signed">
+                <span class="toggle-slider"></span>
+                <span class="toggle-label">Accept Internal / Self-Signed SSL</span>
+              </label>
+            </div>
+
+            <div class="form-actions col-12 flex-between">
+              <button type="button" class="btn btn-outline" id="btnTestExchange">
+                <span>&#128269;</span> Test Exchange Connection
+              </button>
+              <button type="submit" class="btn btn-primary">Save Exchange Settings</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- Tab Content: Forwarding Rules -->
+      <section id="tab-forwarding" class="tab-pane">
+        <div class="content-card">
+          <div class="card-header">
+            <h3>Email Forwarding Rules</h3>
+            <p class="card-desc">Specify destination Gmail accounts and forwarding appearance.</p>
+          </div>
+          <form id="formForwarding" class="form-grid">
+            <div class="form-group col-12">
+              <label for="targetEmails">Destination Gmail Address(es)</label>
+              <textarea id="targetEmails" name="target_emails" rows="3" placeholder="example1@gmail.com, example2@gmail.com" required></textarea>
+              <small>Enter one or multiple Gmail accounts separated by comma or new line.</small>
+            </div>
+
+            <div class="form-group col-6">
+              <label for="subjectPrefix">Subject Prefix (Optional)</label>
+              <input type="text" id="subjectPrefix" name="subject_prefix" placeholder="[FWD-Exchange] ">
+              <small>Will be prepended to the email subject. Leave empty for original subject.</small>
+            </div>
+
+            <div class="form-group col-6">
+              <label for="pollInterval">Polling Interval (Minutes)</label>
+              <input type="number" id="pollInterval" name="poll_interval_minutes" value="1" min="1" max="1440" required>
+              <small>How often the service checks Exchange for new emails.</small>
+            </div>
+
+            <div class="form-group col-6 flex-center-vert">
+              <label class="toggle-control">
+                <input type="checkbox" id="includeBanner" name="include_banner" checked>
+                <span class="toggle-slider"></span>
+                <span class="toggle-label">Include Forwarding Header Banner in Body</span>
+              </label>
+            </div>
+            <div class="form-group col-6 flex-center-vert">
+              <label class="toggle-control">
+                <input type="checkbox" id="preserveReplyTo" name="preserve_reply_to" checked>
+                <span class="toggle-slider"></span>
+                <span class="toggle-label">Set Original Sender as Reply-To (Recommended)</span>
+              </label>
+            </div>
+
+            <div class="form-actions col-12">
+              <button type="submit" class="btn btn-primary">Save Forwarding Rules</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- Tab Content: Exchange SMTP Relay -->
+      <section id="tab-smtp" class="tab-pane">
+        <div class="content-card">
+          <div class="card-header">
+            <h3>Internal Exchange SMTP Relay</h3>
+            <p class="card-desc">Configure the outbound SMTP connection to the Internal Exchange Server to relay emails to Gmail.</p>
+          </div>
+          <form id="formSmtp" class="form-grid">
+            <div class="form-group col-6">
+              <label for="smtpHost">Exchange Relay Host / IP</label>
+              <input type="text" id="smtpHost" name="host" placeholder="mail.company.local or 192.168.1.10" required>
+              <small>Internal Exchange server host or IP address.</small>
+            </div>
+            <div class="form-group col-3">
+              <label for="smtpPort">SMTP Port</label>
+              <input type="number" id="smtpPort" name="port" value="25" required>
+              <small>25 (standard internal relay), 587 (STARTTLS), or 465 (SSL).</small>
+            </div>
+            <div class="form-group col-3">
+              <label for="smtpSecurity">Encryption</label>
+              <select id="smtpSecurity" name="security">
+                <option value="plain">None / Plain (Port 25)</option>
+                <option value="starttls">STARTTLS (Port 587)</option>
+                <option value="ssl">SSL / TLS (Port 465)</option>
+              </select>
+            </div>
+
+            <div class="form-group col-6">
+              <label for="smtpFromEmail">Sender From Address</label>
+              <input type="email" id="smtpFromEmail" name="from_email" placeholder="forwarder@company.com" required>
+              <small>Authorized sender address on the Exchange server.</small>
+            </div>
+            <div class="form-group col-6">
+              <label for="smtpFromName">Sender Display Name</label>
+              <input type="text" id="smtpFromName" name="from_name" value="Exchange Email Forwarder">
+            </div>
+
+            <div class="form-group col-12 flex-center-vert">
+              <label class="toggle-control">
+                <input type="checkbox" id="smtpAuthRequired" name="auth_required">
+                <span class="toggle-slider"></span>
+                <span class="toggle-label">Relay Requires Authentication (Check if not an open internal relay)</span>
+              </label>
+            </div>
+
+            <div id="smtpAuthFields" class="form-row col-12 hidden">
+              <div class="form-group col-6">
+                <label for="smtpUsername">SMTP Username</label>
+                <input type="text" id="smtpUsername" name="username" placeholder="user@company.com">
+              </div>
+              <div class="form-group col-6">
+                <label for="smtpPassword">SMTP Password</label>
+                <input type="password" id="smtpPassword" name="password" placeholder="••••••••">
+                <small>Leave blank to keep existing stored password.</small>
+              </div>
+            </div>
+
+            <div class="form-actions col-12 flex-between">
+              <button type="button" class="btn btn-outline" id="btnTestSmtp">
+                <span>&#9993;</span> Send Test Email to Target Gmail
+              </button>
+              <button type="submit" class="btn btn-primary">Save Relay Settings</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- Tab Content: Activity Logs -->
+      <section id="tab-logs" class="tab-pane">
+        <div class="content-card">
+          <div class="card-header flex-between">
+            <div>
+              <h3>System Event Logs</h3>
+              <p class="card-desc">Real-time operational events, polling triggers, and detailed diagnostic logs.</p>
+            </div>
+            <div class="actions">
+              <button class="btn btn-sm btn-outline" id="btnClearLogs">Clear Log View</button>
+              <button class="btn btn-sm btn-primary" id="btnRefreshLogs">Refresh</button>
+            </div>
+          </div>
+          <div class="log-viewer" id="logViewer">
+            <div class="log-entry info">[System] Application initialized. Waiting for log events...</div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Email Details Modal -->
+  <div id="detailModal" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="modalTitle">Forward Event Details</h3>
+        <button class="btn-close" id="btnModalClose">&times;</button>
+      </div>
+      <div class="modal-body" id="modalContent"></div>
+    </div>
+  </div>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

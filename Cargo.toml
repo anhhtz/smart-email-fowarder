@@ -1,0 +1,45 @@
+[package]
+name = "smart-email-forwarder"
+version = "0.1.0"
+edition = "2021"
+description = "A lightweight cross-platform email forwarder for MS Exchange to Gmail"
+
+[dependencies]
+# Async runtime & Web framework
+tokio = { version = "1.38", features = ["full"] }
+futures-util = "0.3"
+axum = { version = "0.7", features = ["macros"] }
+tower = { version = "0.5", features = ["util"] }
+tower-http = { version = "0.5", features = ["cors", "trace"] }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Embedded SQLite (bundled SQLite C-source, zero external DLL/lib dependencies)
+rusqlite = { version = "0.31", features = ["bundled"] }
+
+# Email retrieval (IMAP)
+async-imap = { version = "0.9", default-features = false, features = ["runtime-tokio"] }
+tokio-native-tls = "0.3"
+native-tls = "0.2"
+
+# Email sending (SMTP)
+lettre = { version = "0.11", default-features = false, features = ["tokio1", "tokio1-native-tls", "builder", "smtp-transport"] }
+
+# Email parsing (MIME, attachments, bodies)
+mail-parser = "0.9"
+
+# CLI & Configuration
+clap = { version = "4.5", features = ["derive"] }
+chrono = { version = "0.4", features = ["serde"] }
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
+
+[target.'cfg(windows)'.dependencies]
+windows-service = "0.7"
+
+[dev-dependencies]
+http-body-util = "0.1"
