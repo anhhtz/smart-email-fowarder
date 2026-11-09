@@ -83,13 +83,15 @@
               <span class="user-name" id="userDisplayName">Exchange User</span>
               <span class="auth-provider-tag" id="authProviderTag">Exchange Mailbox</span>
             </div>
-            <button class="btn btn-sm btn-outline" id="btnSignOut" style="padding: 4px 8px; font-size: 11px; margin-left: 4px;" title="Sign Out">
-              <span>&#x21AA;</span> Exit
+            <button class="btn btn-sm btn-outline" id="btnSignOut" style="padding: 4px 8px; font-size: 12px; margin-left: 4px;" title="Sign Out">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 12px; height: 12px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              <span>Exit</span>
             </button>
           </div>
 
           <button class="btn btn-secondary" id="btnTogglePoller">
-            <span class="icon">&#10074;&#10074;</span> <span id="togglePollerLabel">Pause Poller</span>
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+            <span id="togglePollerLabel">Pause Poller</span>
           </button>
           <button class="btn btn-primary" id="btnSyncNow">
             <svg class="icon spin-on-click" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
@@ -116,7 +118,9 @@
           <div class="stat-card">
             <div class="stat-header">
               <span class="stat-title">Total Forwarded</span>
-              <span class="stat-icon icon-success">&#10003;</span>
+              <span class="stat-icon icon-success">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 16px; height: 16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+              </span>
             </div>
             <div class="stat-value" id="statTotalForwarded">0</div>
             <div class="stat-footer">Delivered to Gmail accounts</div>
@@ -124,7 +128,9 @@
           <div class="stat-card">
             <div class="stat-header">
               <span class="stat-title">Failed Deliveries</span>
-              <span class="stat-icon icon-danger">&#10007;</span>
+              <span class="stat-icon icon-danger">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+              </span>
             </div>
             <div class="stat-value text-danger" id="statTotalFailed">0</div>
             <div class="stat-footer">Review logs for error details</div>
@@ -132,7 +138,9 @@
           <div class="stat-card">
             <div class="stat-header">
               <span class="stat-title">Poll Interval</span>
-              <span class="stat-icon">&#9201;</span>
+              <span class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              </span>
             </div>
             <div class="stat-value" id="statInterval">1 min</div>
             <div class="stat-footer">Last run: <span id="statLastPoll">Never</span></div>
@@ -143,7 +151,7 @@
         <div class="content-card">
           <div class="card-header flex-between">
             <div>
-              <h3>Recent Forward Activity</h3>
+              <h2>Recent Forward Activity</h2>
               <p class="card-desc">History of emails retrieved from Exchange and forwarded.</p>
             </div>
             <button class="btn btn-sm btn-outline" id="btnRefreshActivity">Refresh</button>
@@ -313,7 +321,7 @@
                 </div>
                 <div class="reader-meta-item" style="grid-column: 1 / -1;">
                   <span class="reader-meta-label">Message-ID:</span>
-                  <span class="reader-meta-val"><code id="readerMsgId" style="font-size: 11px;">--</code></span>
+                  <span class="reader-meta-val"><code id="readerMsgId" style="font-size: 12px;">--</code></span>
                 </div>
               </div>
             </div>
@@ -390,7 +398,8 @@
           </div>
           <div class="process-hero-actions">
             <button class="btn btn-secondary btn-sm" id="btnToggleProcAutoRefresh">
-              <span class="icon">&#9881;</span> Auto-Refresh: <strong id="procAutoRefreshLabel">ON (3s)</strong>
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              <span>Auto-Refresh: <strong id="procAutoRefreshLabel">ON (3s)</strong></span>
             </button>
             <button class="btn btn-outline btn-sm" id="btnRefreshProcess">
               <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -415,7 +424,9 @@
           <div class="stat-card">
             <div class="stat-header">
               <span class="stat-title">Memory Usage (RSS)</span>
-              <span class="stat-icon">&#128190;</span>
+              <span class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+              </span>
             </div>
             <div class="stat-value" id="procMemRss">--</div>
             <div class="metric-bar-wrapper">
@@ -431,7 +442,9 @@
           <div class="stat-card">
             <div class="stat-header">
               <span class="stat-title">CPU & Load Average</span>
-              <span class="stat-icon">&#9889;</span>
+              <span class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+              </span>
             </div>
             <div class="stat-value" id="procLoad1m">--</div>
             <div class="stat-footer">
@@ -444,7 +457,9 @@
           <div class="stat-card">
             <div class="stat-header">
               <span class="stat-title">OS Threads</span>
-              <span class="stat-icon">&#128260;</span>
+              <span class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+              </span>
             </div>
             <div class="stat-value" id="procThreads">--</div>
             <div class="stat-footer">
@@ -470,7 +485,7 @@
         <div class="content-card">
           <div class="card-header flex-between">
             <div>
-              <h3>Service Subsystems & Component Status</h3>
+              <h2>Service Subsystems & Component Status</h2>
               <p class="card-desc">Real-time status of internal process modules, worker loops, and network clients.</p>
             </div>
             <span class="badge badge-neutral" id="procLastUpdated">Updated: Just now</span>
@@ -482,7 +497,7 @@
               <div class="subsystem-header">
                 <div class="subsystem-title">
                   <span class="status-dot active" id="subPollerDot"></span>
-                  <h4>Background Poller Worker</h4>
+                  <h3>Background Poller Worker</h3>
                 </div>
                 <span class="badge badge-success" id="subPollerBadge">Active</span>
               </div>
@@ -507,7 +522,7 @@
               <div class="subsystem-header">
                 <div class="subsystem-title">
                   <span class="status-dot active" id="subDbDot"></span>
-                  <h4>SQLite Storage Engine</h4>
+                  <h3>SQLite Storage Engine</h3>
                 </div>
                 <span class="badge badge-success" id="subDbBadge">Connected</span>
               </div>
@@ -532,7 +547,7 @@
               <div class="subsystem-header">
                 <div class="subsystem-title">
                   <span class="status-dot active" id="subImapDot"></span>
-                  <h4>Inbound Exchange IMAP</h4>
+                  <h3>Inbound Exchange IMAP</h3>
                 </div>
                 <span class="badge badge-neutral" id="subImapBadge">Checking...</span>
               </div>
@@ -557,7 +572,7 @@
               <div class="subsystem-header">
                 <div class="subsystem-title">
                   <span class="status-dot active" id="subSmtpDot"></span>
-                  <h4>Outbound Mailer (Exchange)</h4>
+                  <h3>Outbound Mailer (Exchange)</h3>
                 </div>
                 <span class="badge badge-neutral" id="subSmtpBadge">Checking...</span>
               </div>
@@ -583,7 +598,7 @@
         <div class="content-card" id="healthCheckCard">
           <div class="card-header flex-between">
             <div>
-              <h3>Live Subsystem Diagnostics</h3>
+              <h2>Live Subsystem Diagnostics</h2>
               <p class="card-desc">Latency measurements and connectivity validation across internal modules.</p>
             </div>
             <span class="badge badge-success" id="healthOverallBadge">Ready for Diagnostics</span>
@@ -610,7 +625,7 @@
         <!-- Process Runtime Environment & Binary Specs -->
         <div class="content-card">
           <div class="card-header">
-            <h3>Process Environment & Binary Specifications</h3>
+            <h2>Process Environment & Binary Specifications</h2>
             <p class="card-desc">Host operating system details, working directory, and startup arguments.</p>
           </div>
           <table class="env-table">
@@ -654,7 +669,7 @@
       <section id="tab-exchange" class="tab-pane">
         <div class="content-card">
           <div class="card-header">
-            <h3>Internal Exchange Mailbox & Outbound Forwarder</h3>
+            <h2>Internal Exchange Mailbox & Outbound Forwarder</h2>
             <p class="card-desc">Configure your internal MS Exchange mailbox credentials. This account is used to ingest incoming emails and forward them out to Gmail.</p>
           </div>
           <form id="formExchange" class="form-grid">
@@ -734,10 +749,12 @@
             <div class="form-actions col-12 flex-between">
               <div style="display: flex; gap: 8px;">
                 <button type="button" class="btn btn-outline" id="btnTestExchange">
-                  <span>&#128269;</span> Test Mailbox Access
+                  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                  <span>Test Mailbox Access</span>
                 </button>
                 <button type="button" class="btn btn-outline" id="btnTestSmtp">
-                  <span>&#9993;</span> Send Test Email to Target Gmail
+                  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                  <span>Send Test Email to Target Gmail</span>
                 </button>
               </div>
               <button type="submit" class="btn btn-primary">Save Exchange Settings</button>
@@ -749,7 +766,7 @@
         <div class="content-card" style="margin-top: 24px;">
           <div class="card-header flex-between">
             <div>
-              <h3>Google OAuth2 Single Sign-On Configuration</h3>
+              <h2>Google OAuth2 Single Sign-On Configuration</h2>
               <p class="card-desc">
                 Google Workspace &amp; Gmail OAuth 2.0 Web Application credentials configured via <code>.env</code>.
               </p>
@@ -781,7 +798,8 @@
 
             <div class="form-actions col-12 flex-between">
               <button type="button" class="btn btn-outline" id="btnTestGoogleSlot">
-                <span>&#128269;</span> Test Google OAuth2 Endpoint
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <span>Test Google OAuth2 Endpoint</span>
               </button>
               <button type="submit" class="btn btn-secondary">Save OAuth2 Configuration</button>
             </div>
@@ -793,7 +811,7 @@
       <section id="tab-forwarding" class="tab-pane">
         <div class="content-card">
           <div class="card-header">
-            <h3>Email Forwarding Rules</h3>
+            <h2>Email Forwarding Rules</h2>
             <p class="card-desc">Specify destination Gmail accounts and forwarding appearance.</p>
           </div>
           <form id="formForwarding" class="form-grid">
@@ -832,7 +850,8 @@
 
             <div class="form-actions col-12 flex-between">
               <button type="button" class="btn btn-outline" id="btnTestForwarding">
-                <span>&#9993;</span> Send Test Email to Target Gmail
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                <span>Send Test Email to Target Gmail</span>
               </button>
               <button type="submit" class="btn btn-primary">Save Forwarding Rules</button>
             </div>
@@ -845,7 +864,7 @@
         <div class="content-card">
           <div class="card-header flex-between">
             <div>
-              <h3>System Event Logs</h3>
+              <h2>System Event Logs</h2>
               <p class="card-desc">Real-time operational events, polling triggers, and detailed diagnostic logs.</p>
             </div>
             <div class="actions">
@@ -865,16 +884,18 @@
   <div id="authScreen" class="auth-overlay">
     <div class="auth-card">
       <div class="auth-header">
-        <div class="auth-logo">
-          <svg viewBox="0 0 24 24" width="36" height="36">
-            <path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.7 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.4 9 5 12 5z"/>
-            <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z"/>
-            <path fill="#FBBC05" d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.8s.2-2.1.4-2.8L1.9 6.3C.7 8.7 0 10.3 0 12s.7 3.3 1.9 5.7l3.7-2.9z"/>
-            <path fill="#34A853" d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2-6.4-4.8L1.9 16.4C3.7 20.1 7.5 23 12 23z"/>
-          </svg>
+        <div class="auth-header-brand">
+          <div class="auth-logo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+              <polyline points="22,6 12,13 2,6"/>
+            </svg>
+          </div>
+          <div>
+            <h2>Smart Email Forwarder</h2>
+            <p class="auth-subtitle">Sign in to manage forwarding rules and monitor mailboxes</p>
+          </div>
         </div>
-        <h2>Smart Email Forwarder</h2>
-        <p class="auth-subtitle">Sign in to manage forwarding rules and monitor mailboxes</p>
       </div>
 
       <!-- Provider Selector Tabs (Google OAuth2 First & Default) -->
@@ -913,12 +934,12 @@
             </svg>
           </div>
           <h3>Sign In with Google</h3>
-          <span class="badge badge-success" style="background: rgba(16, 185, 129, 0.2); color: #10b981; font-weight: 600;">Default Auth</span>
+          <span class="badge badge-success">Default Auth</span>
           <p class="oauth-desc">
             Sign in with your corporate Google Workspace or personal Gmail account via official Google OAuth 2.0.
           </p>
 
-          <a href="/api/auth/oauth/google" class="btn btn-primary btn-block btn-lg" id="btnGoogleSignIn" style="background: #4285F4; border-color: #4285F4; display: flex; align-items: center; justify-content: center; gap: 10px; font-weight: 600; text-decoration: none; color: white; margin-top: 16px;">
+          <a href="/api/auth/oauth/google" class="btn btn-primary btn-block btn-lg" id="btnGoogleSignIn" style="background: #1a73e8; border-color: #1a73e8; display: flex; align-items: center; justify-content: center; gap: 10px; font-weight: 600; text-decoration: none; color: white; margin-top: 16px;">
             <svg viewBox="0 0 24 24" width="20" height="20" style="vertical-align: middle;">
               <path fill="#ffffff" d="M21.35 11.1h-9.17v2.98h5.27c-.23 1.21-.92 2.24-1.95 2.92v2.43h3.15c1.85-1.7 2.91-4.21 2.91-7.15 0-.69-.06-1.37-.21-2.18z"/>
               <path fill="#ffffff" d="M12.18 21c2.63 0 4.84-.87 6.45-2.37l-3.15-2.43c-.87.59-1.99.93-3.3.93-2.54 0-4.69-1.72-5.46-4.03H3.45v2.51C5.07 18.79 8.38 21 12.18 21z"/>
@@ -951,7 +972,7 @@
             To enable Google Sign-In, please provide your Google Cloud Console OAuth 2.0 Web Client credentials in your <code>.env</code> file.
           </p>
 
-          <div style="background: #0f172a; padding: 12px; border-radius: 6px; text-align: left; margin: 12px 0; font-family: monospace; font-size: 11px; color: #38bdf8; border: 1px solid var(--border-color); line-height: 1.6;">
+          <div style="background: #0f172a; padding: 12px; border-radius: 6px; text-align: left; margin: 12px 0; font-family: monospace; font-size: 12px; color: #38bdf8; border: 1px solid var(--border-color); line-height: 1.6;">
             <div>GOOGLE_CLIENT_ID=your_google_client_id</div>
             <div>GOOGLE_CLIENT_SECRET=your_google_client_secret</div>
             <div>GOOGLE_REDIRECT_URI=http://localhost:8080/api/auth/oauth/google/callback</div>
@@ -966,7 +987,8 @@
           </div>
 
           <button type="button" class="btn btn-outline btn-block" id="btnPreviewGoogleOAuth" style="margin-top: 8px;">
-            <span>&#128269; View OAuth2 Endpoint Details</span>
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <span>View OAuth2 Endpoint Details</span>
           </button>
 
           <div class="oauth-actions" style="margin-top: 14px;">

@@ -47,6 +47,7 @@ A zero-external-dependency, 100% offline-ready single executable with an embedde
 
 - **Name**: Smart Email Forwarder
 - **Tone & Voice**: Calm, precise, reliable, and functional. Avoids marketing fluff or decorative distraction in favor of clear status communication and actionable controls.
+- **Visual Direction (Category Standard)**: Modern enterprise IT console executed at full fidelity. Clean, high-contrast surfaces (neutral zinc/slate with crisp white/dark cards), distinct cobalt accents (`#2563eb`), clear system grotesque UI typography, and precise status badge indicators.
 
 ## Evidence on Hand
 
