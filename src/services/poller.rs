@@ -188,12 +188,8 @@ impl PollerManager {
         };
 
         let smtp_cfg = match cfg.smtp {
-            Some(s) => s,
-            None => {
-                let msg = "Exchange SMTP relay not configured. Skipping poll cycle.";
-                let _ = db.log_event("WARN", msg);
-                return Ok(SyncResult { forwarded_count: 0, failed_count: 0 });
-            }
+            Some(ref s) => s.resolve_with_exchange(Some(&exchange_cfg)),
+            None => exchange_cfg.to_smtp_config(),
         };
 
         if forward_cfg.target_emails.is_empty() {
@@ -241,8 +237,7 @@ impl PollerManager {
                 continue;
             }
 
-            let effective_smtp_cfg = smtp_cfg.resolve_with_exchange(Some(&exchange_cfg));
-            let result = Forwarder::forward_email(&email.raw_bytes, &forward_cfg, &effective_smtp_cfg).await;
+            let result = Forwarder::forward_email(&email.raw_bytes, &forward_cfg, &smtp_cfg).await;
 
             if result.success {
                 forwarded_count += 1;

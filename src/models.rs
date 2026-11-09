@@ -13,8 +13,22 @@ pub struct ExchangeConfig {
     pub mark_as_read: bool,
     #[serde(default = "default_false")]
     pub allow_self_signed: bool,
+    #[serde(default = "default_smtp_port")]
+    pub smtp_port: u16,
+    #[serde(default = "default_smtp_security")]
+    pub smtp_security: String,
+    #[serde(default)]
+    pub from_email: Option<String>,
+    #[serde(default = "default_from_name")]
+    pub from_name: String,
 }
 
+fn default_smtp_port() -> u16 {
+    587
+}
+fn default_smtp_security() -> String {
+    "starttls".to_string()
+}
 fn default_folder() -> String {
     "INBOX".to_string()
 }
@@ -23,6 +37,36 @@ fn default_true() -> bool {
 }
 fn default_false() -> bool {
     false
+}
+
+impl ExchangeConfig {
+    pub fn to_smtp_config(&self) -> SmtpConfig {
+        let from_email = self
+            .from_email
+            .as_deref()
+            .filter(|s| !s.trim().is_empty())
+            .unwrap_or(&self.username)
+            .to_string();
+
+        let from_name = if self.from_name.trim().is_empty() {
+            "Exchange Email Forwarder".to_string()
+        } else {
+            self.from_name.clone()
+        };
+
+        SmtpConfig {
+            host: self.host.clone(),
+            port: self.smtp_port,
+            security: self.smtp_security.clone(),
+            from_email,
+            from_name,
+            auth_required: true,
+            use_exchange_credentials: true,
+            allow_self_signed: self.allow_self_signed,
+            username: self.username.clone(),
+            password: self.password.clone(),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -54,6 +98,8 @@ pub struct SmtpConfig {
     pub auth_required: bool,
     #[serde(default = "default_false")]
     pub use_exchange_credentials: bool,
+    #[serde(default = "default_false")]
+    pub allow_self_signed: bool,
     #[serde(default)]
     pub username: String,
     pub password: Option<String>,
@@ -71,6 +117,7 @@ impl SmtpConfig {
             if let Some(ex) = exchange {
                 resolved.username = ex.username.clone();
                 resolved.password = ex.password.clone();
+                resolved.allow_self_signed = ex.allow_self_signed;
             } else {
                 resolved.username = String::new();
                 resolved.password = None;
@@ -196,4 +243,96 @@ pub struct ProcessStatus {
     pub poller: SystemStatus,
     pub app_version: String,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MailboxMessageSummary {
+    pub uid: u32,
+    pub message_id: String,
+    pub subject: String,
+    pub from: String,
+    pub to: String,
+    pub date: String,
+    pub is_seen: bool,
+    pub is_forwarded: bool,
+    pub has_attachments: bool,
+    pub size_formatted: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MailboxAttachmentInfo {
+    pub index: usize,
+    pub filename: String,
+    pub content_type: String,
+    pub size_bytes: usize,
+    pub size_formatted: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MailboxMessageDetail {
+    pub uid: u32,
+    pub message_id: String,
+    pub subject: String,
+    pub from: String,
+    pub to: String,
+    pub cc: String,
+    pub date: String,
+    pub is_seen: bool,
+    pub is_forwarded: bool,
+    pub body_text: String,
+    pub body_html: Option<String>,
+    pub raw_headers: String,
+    pub attachments: Vec<MailboxAttachmentInfo>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MailboxFolderList {
+    pub current_folder: String,
+    pub folders: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MailboxListResponse {
+    pub folder: String,
+    pub total: usize,
+    pub page: usize,
+    pub limit: usize,
+    pub total_pages: usize,
+    pub messages: Vec<MailboxMessageSummary>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct MailboxListQuery {
+    pub folder: Option<String>,
+    pub filter: Option<String>, // "all", "unseen", "seen"
+    pub page: Option<usize>,
+    pub limit: Option<usize>,
+    pub q: Option<String>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct MailboxMessageQuery {
+    pub folder: Option<String>,
+    pub uid: u32,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct MailboxAttachmentQuery {
+    pub folder: Option<String>,
+    pub uid: u32,
+    pub index: usize,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct MailboxActionRequest {
+    pub folder: Option<String>,
+    pub uid: u32,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct MailboxMarkReadRequest {
+    pub folder: Option<String>,
+    pub uid: u32,
+    pub seen: bool,
+}
+
 

@@ -31,6 +31,10 @@ fn test_config_save_and_password_preservation() {
         folder: "INBOX".to_string(),
         mark_as_read: true,
         allow_self_signed: true,
+        smtp_port: 587,
+        smtp_security: "starttls".to_string(),
+        from_email: None,
+        from_name: "Exchange Email Forwarder".to_string(),
     };
     db.save_exchange_config(&mut ex_cfg).unwrap();
 
@@ -49,6 +53,10 @@ fn test_config_save_and_password_preservation() {
         folder: "INBOX".to_string(),
         mark_as_read: true,
         allow_self_signed: true,
+        smtp_port: 587,
+        smtp_security: "starttls".to_string(),
+        from_email: None,
+        from_name: "Exchange Email Forwarder".to_string(),
     };
     db.save_exchange_config(&mut update_cfg).unwrap();
 
@@ -79,6 +87,7 @@ fn test_config_save_and_password_preservation() {
         from_name: "Relay Service".to_string(),
         auth_required: false,
         use_exchange_credentials: false,
+        allow_self_signed: false,
         username: String::new(),
         password: None,
     };
@@ -89,6 +98,36 @@ fn test_config_save_and_password_preservation() {
     assert_eq!(loaded_smtp.port, 25);
     assert!(!loaded_smtp.auth_required);
     assert!(!loaded_smtp.use_exchange_credentials);
+}
+
+#[test]
+fn test_exchange_to_smtp_config_default() {
+    let ex = ExchangeConfig {
+        host: "mail.company.local".to_string(),
+        port: 993,
+        security: "ssl".to_string(),
+        username: "user@company.com".to_string(),
+        password: Some("Pass123".to_string()),
+        folder: "INBOX".to_string(),
+        mark_as_read: true,
+        allow_self_signed: true,
+        smtp_port: 587,
+        smtp_security: "starttls".to_string(),
+        from_email: None,
+        from_name: "Company Forwarder".to_string(),
+    };
+
+    let smtp = ex.to_smtp_config();
+    assert_eq!(smtp.host, "mail.company.local");
+    assert_eq!(smtp.port, 587);
+    assert_eq!(smtp.security, "starttls");
+    assert_eq!(smtp.username, "user@company.com");
+    assert_eq!(smtp.password.as_deref(), Some("Pass123"));
+    assert_eq!(smtp.from_email, "user@company.com");
+    assert_eq!(smtp.from_name, "Company Forwarder");
+    assert!(smtp.auth_required);
+    assert!(smtp.use_exchange_credentials);
+    assert!(smtp.allow_self_signed);
 }
 
 #[test]
@@ -104,6 +143,10 @@ fn test_smtp_use_exchange_credentials() {
         folder: "INBOX".to_string(),
         mark_as_read: true,
         allow_self_signed: false,
+        smtp_port: 587,
+        smtp_security: "starttls".to_string(),
+        from_email: Some("jdoe@company.com".to_string()),
+        from_name: "John Doe".to_string(),
     };
     db.save_exchange_config(&mut ex_cfg).unwrap();
 
@@ -115,6 +158,7 @@ fn test_smtp_use_exchange_credentials() {
         from_name: "John Doe".to_string(),
         auth_required: true,
         use_exchange_credentials: true,
+        allow_self_signed: false,
         username: String::new(),
         password: None,
     };

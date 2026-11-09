@@ -40,15 +40,9 @@
   // Forms
   const formExchange = document.getElementById("formExchange");
   const btnTestExchange = document.getElementById("btnTestExchange");
-  const formForwarding = document.getElementById("formForwarding");
-  const formSmtp = document.getElementById("formSmtp");
   const btnTestSmtp = document.getElementById("btnTestSmtp");
-  const smtpAuthRequired = document.getElementById("smtpAuthRequired");
-  const smtpAuthFields = document.getElementById("smtpAuthFields");
-  const smtpUseExchangeCredentials = document.getElementById("smtpUseExchangeCredentials");
-  const smtpExchangeCredentialsInfo = document.getElementById("smtpExchangeCredentialsInfo");
-  const exchangeAccountDisplay = document.getElementById("exchangeAccountDisplay");
-  const smtpCustomCredentials = document.getElementById("smtpCustomCredentials");
+  const btnTestForwarding = document.getElementById("btnTestForwarding");
+  const formForwarding = document.getElementById("formForwarding");
 
   // Process Monitor Elements
   const procBadgeStatus = document.getElementById("procBadgeStatus");
@@ -131,21 +125,21 @@
       title: "Dashboard",
       sub: "System health, forward statistics, and recent activity.",
     },
+    mailbox: {
+      title: "Email Browser",
+      sub: "Browse, inspect, and forward emails directly from your Exchange mailbox.",
+    },
     process: {
       title: "Process Monitor",
       sub: "Real-time telemetry, memory usage, worker threads, and process health.",
     },
     exchange: {
       title: "Exchange Mailbox",
-      sub: "Configure the IMAP connection to access your internal MS Exchange mailbox.",
+      sub: "Configure your internal MS Exchange mailbox for inbound retrieval and outbound forwarding.",
     },
     forwarding: {
       title: "Forwarding Rules",
       sub: "Specify destination Gmail accounts and forwarding appearance.",
-    },
-    smtp: {
-      title: "Exchange Relay",
-      sub: "Configure the outbound SMTP connection to relay emails to Gmail.",
     },
     logs: {
       title: "Activity Logs",
@@ -181,49 +175,17 @@
       loadLogs();
     } else if (tabId === "process") {
       loadProcessMetrics();
+    } else if (tabId === "mailbox") {
+      loadMailboxFolders();
+      loadMailboxMessages();
     }
   }
+
 
   navItems.forEach((item) => {
     item.addEventListener("click", () => switchTab(item.dataset.tab));
   });
 
-  // Toggle SMTP Auth Fields and Exchange Credentials
-  function updateSmtpAuthUI() {
-    const isAuth = smtpAuthRequired.checked;
-    smtpAuthFields.classList.toggle("hidden", !isAuth);
-
-    if (!isAuth) {
-      return;
-    }
-
-    const useExCreds = smtpUseExchangeCredentials.checked;
-    smtpCustomCredentials.classList.toggle("hidden", useExCreds);
-    smtpExchangeCredentialsInfo.classList.toggle("hidden", !useExCreds);
-
-    if (useExCreds) {
-      const exUser = (document.getElementById("exchangeUsername").value || "").trim();
-      const badge = smtpExchangeCredentialsInfo.querySelector(".credentials-badge-info");
-      if (exUser) {
-        exchangeAccountDisplay.textContent = exUser;
-        if (badge) badge.className = "credentials-badge-info";
-        const fromEmailInput = document.getElementById("smtpFromEmail");
-        if (fromEmailInput && !fromEmailInput.value.trim() && exUser.includes("@")) {
-          fromEmailInput.value = exUser;
-        }
-      } else {
-        exchangeAccountDisplay.textContent = "None configured (please configure in Exchange Mailbox tab)";
-        if (badge) badge.className = "credentials-badge-info warning";
-      }
-    }
-  }
-
-  smtpAuthRequired.addEventListener("change", updateSmtpAuthUI);
-  smtpUseExchangeCredentials.addEventListener("change", updateSmtpAuthUI);
-  const exUsernameEl = document.getElementById("exchangeUsername");
-  if (exUsernameEl) {
-    exUsernameEl.addEventListener("input", updateSmtpAuthUI);
-  }
 
   // Modal handlers
   function showModal(title, html) {
@@ -314,6 +276,14 @@
         document.getElementById("exchangeUsername").value =
           config.exchange.username || "";
         document.getElementById("exchangePassword").value = "";
+        document.getElementById("exchangeSmtpPort").value =
+          config.exchange.smtp_port || 587;
+        document.getElementById("exchangeSmtpSecurity").value =
+          config.exchange.smtp_security || "starttls";
+        document.getElementById("exchangeFromEmail").value =
+          config.exchange.from_email || "";
+        document.getElementById("exchangeFromName").value =
+          config.exchange.from_name || "Exchange Email Forwarder";
         document.getElementById("exchangeFolder").value =
           config.exchange.folder || "INBOX";
         document.getElementById("exchangeMarkRead").checked =
@@ -335,24 +305,6 @@
           config.forwarding.include_banner !== false;
         document.getElementById("preserveReplyTo").checked =
           config.forwarding.preserve_reply_to !== false;
-      }
-
-      // SMTP Relay Form
-      if (config.smtp) {
-        document.getElementById("smtpHost").value = config.smtp.host || "";
-        document.getElementById("smtpPort").value = config.smtp.port || 25;
-        document.getElementById("smtpSecurity").value =
-          config.smtp.security || "plain";
-        document.getElementById("smtpFromEmail").value =
-          config.smtp.from_email || "";
-        document.getElementById("smtpFromName").value =
-          config.smtp.from_name || "Exchange Email Forwarder";
-        smtpAuthRequired.checked = !!config.smtp.auth_required;
-        smtpUseExchangeCredentials.checked = !!config.smtp.use_exchange_credentials;
-        document.getElementById("smtpUsername").value =
-          config.smtp.username || "";
-        document.getElementById("smtpPassword").value = "";
-        updateSmtpAuthUI();
       }
     } catch (e) {
       showAlert(`Failed to load configuration: ${e.message}`, "error");
@@ -439,13 +391,17 @@
       mark_as_read: document.getElementById("exchangeMarkRead").checked,
       allow_self_signed: document.getElementById("exchangeAllowSelfSigned")
         .checked,
+      smtp_port: parseInt(document.getElementById("exchangeSmtpPort").value, 10) || 587,
+      smtp_security: document.getElementById("exchangeSmtpSecurity").value,
+      from_email: document.getElementById("exchangeFromEmail").value.trim() || null,
+      from_name: document.getElementById("exchangeFromName").value.trim() || "Exchange Email Forwarder",
     };
     try {
       await api("/config/exchange", {
         method: "POST",
         body: JSON.stringify(data),
       });
-      showAlert("Exchange settings saved successfully.", "success");
+      showAlert("Exchange mailbox & outbound settings saved successfully.", "success");
       loadStatus();
     } catch (err) {
       showAlert(`Error saving Exchange settings: ${err.message}`, "error");
@@ -482,7 +438,7 @@
     } finally {
       btnTestExchange.disabled = false;
       btnTestExchange.innerHTML =
-        "<span>&#128269;</span> Test Exchange Connection";
+        "<span>&#128269;</span> Test Mailbox Access";
     }
   });
 
@@ -516,63 +472,38 @@
     }
   });
 
-  // Save SMTP Relay Settings
-  formSmtp.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const data = {
-      host: document.getElementById("smtpHost").value.trim(),
-      port: parseInt(document.getElementById("smtpPort").value, 10),
-      security: document.getElementById("smtpSecurity").value,
-      from_email: document.getElementById("smtpFromEmail").value.trim(),
-      from_name: document.getElementById("smtpFromName").value.trim(),
-      auth_required: smtpAuthRequired.checked,
-      use_exchange_credentials: smtpUseExchangeCredentials.checked,
-      username: document.getElementById("smtpUsername").value.trim(),
-      password: document.getElementById("smtpPassword").value,
-    };
-    try {
-      await api("/config/smtp", { method: "POST", body: JSON.stringify(data) });
-      showAlert("Exchange SMTP relay settings saved successfully.", "success");
-      loadStatus();
-    } catch (err) {
-      showAlert(`Error saving relay settings: ${err.message}`, "error");
+  // Send Test Email Out via Exchange Mailbox
+  async function sendTestEmail(btn) {
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spin">&#9696;</span> Sending test email...';
     }
-  });
-
-  // Test SMTP Relay (Send Test Email)
-  btnTestSmtp.addEventListener("click", async () => {
-    btnTestSmtp.disabled = true;
-    btnTestSmtp.innerHTML =
-      '<span class="spin">&#9696;</span> Sending test email...';
     try {
-      const data = {
-        host: document.getElementById("smtpHost").value.trim(),
-        port: parseInt(document.getElementById("smtpPort").value, 10),
-        security: document.getElementById("smtpSecurity").value,
-        from_email: document.getElementById("smtpFromEmail").value.trim(),
-        from_name: document.getElementById("smtpFromName").value.trim(),
-        auth_required: smtpAuthRequired.checked,
-        use_exchange_credentials: smtpUseExchangeCredentials.checked,
-        username: document.getElementById("smtpUsername").value.trim(),
-        password: document.getElementById("smtpPassword").value,
-      };
       const res = await api("/test/smtp", {
         method: "POST",
-        body: JSON.stringify(data),
+        body: JSON.stringify({}),
       });
       showAlert(
-        `Test email successfully relayed to ${res.recipient}! Check your Gmail inbox.`,
+        `Test email successfully sent to ${res.recipient}! Check your Gmail inbox.`,
         "success",
         8000,
       );
     } catch (err) {
-      showAlert(`Relay Test Failed: ${err.message}`, "error", 10000);
+      showAlert(`Outbound Test Failed: ${err.message}`, "error", 10000);
     } finally {
-      btnTestSmtp.disabled = false;
-      btnTestSmtp.innerHTML =
-        "<span>&#9993;</span> Send Test Email to Target Gmail";
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = "<span>&#9993;</span> Send Test Email to Target Gmail";
+      }
     }
-  });
+  }
+
+  if (btnTestSmtp) {
+    btnTestSmtp.addEventListener("click", () => sendTestEmail(btnTestSmtp));
+  }
+  if (btnTestForwarding) {
+    btnTestForwarding.addEventListener("click", () => sendTestEmail(btnTestForwarding));
+  }
 
   // Sync Now Button
   btnSyncNow.addEventListener("click", async () => {
@@ -732,15 +663,15 @@
         subImapFolder.textContent = "--";
       }
 
-      if (cfg.smtp && cfg.smtp.host) {
+      if (cfg.exchange && cfg.exchange.host) {
         subSmtpDot.className = "status-dot active";
         subSmtpBadge.textContent = "Configured";
         subSmtpBadge.className = "badge badge-success";
-        const authMode = cfg.smtp.use_exchange_credentials
-          ? "Exchange Mailbox Auth"
-          : (cfg.smtp.auth_required ? "Custom Auth" : "No Auth");
-        subSmtpPortSec.textContent = `${cfg.smtp.port} (${cfg.smtp.security || "plain"}, ${authMode})`;
-        subSmtpSender.textContent = cfg.smtp.from_email;
+        const smtpPort = cfg.exchange.smtp_port || 587;
+        const smtpSec = (cfg.exchange.smtp_security || "starttls").toUpperCase();
+        subSmtpHost.textContent = `${cfg.exchange.host}:${smtpPort}`;
+        subSmtpPortSec.textContent = `${smtpPort} (${smtpSec})`;
+        subSmtpSender.textContent = cfg.exchange.from_email || cfg.exchange.username || "--";
       } else {
         subSmtpDot.className = "status-dot paused";
         subSmtpBadge.textContent = "Not Configured";
@@ -831,6 +762,463 @@
       ? "inherit"
       : "var(--danger)";
   });
+
+  // Mailbox Browser State & Elements
+  let mailboxCurrentFolder = "INBOX";
+  let mailboxFilter = "all";
+  let mailboxPage = 1;
+  let mailboxLimit = 20;
+  let mailboxSearch = "";
+  let mailboxSearchTimer = null;
+  let currentViewingUid = null;
+  let currentViewingMessage = null;
+
+  const mailboxFolderSelect = document.getElementById("mailboxFolderSelect");
+  const mailboxFilterPills = document.querySelectorAll("#mailboxFilterPills .pill-btn");
+  const mailboxSearchInput = document.getElementById("mailboxSearchInput");
+  const btnMailboxSearchClear = document.getElementById("btnMailboxSearchClear");
+  const btnRefreshMailbox = document.getElementById("btnRefreshMailbox");
+  const mailboxCountBadge = document.getElementById("mailboxCountBadge");
+  const mailboxTableBody = document.getElementById("mailboxTableBody");
+  const mailboxPaginationInfo = document.getElementById("mailboxPaginationInfo");
+  const mailboxPageLimit = document.getElementById("mailboxPageLimit");
+  const btnMailboxPrevPage = document.getElementById("btnMailboxPrevPage");
+  const btnMailboxNextPage = document.getElementById("btnMailboxNextPage");
+  const mailboxCurrentPageLabel = document.getElementById("mailboxCurrentPageLabel");
+
+  const mailboxListView = document.getElementById("mailboxListView");
+  const mailboxReaderView = document.getElementById("mailboxReaderView");
+  const btnBackToMailboxList = document.getElementById("btnBackToMailboxList");
+  const btnReaderForward = document.getElementById("btnReaderForward");
+  const btnReaderToggleRead = document.getElementById("btnReaderToggleRead");
+  const btnReaderToggleReadText = document.getElementById("btnReaderToggleReadText");
+  const btnReaderDownloadRaw = document.getElementById("btnReaderDownloadRaw");
+
+  const readerSubject = document.getElementById("readerSubject");
+  const readerSeenBadge = document.getElementById("readerSeenBadge");
+  const readerForwardedBadge = document.getElementById("readerForwardedBadge");
+  const readerFrom = document.getElementById("readerFrom");
+  const readerTo = document.getElementById("readerTo");
+  const readerCc = document.getElementById("readerCc");
+  const readerCcRow = document.getElementById("readerCcRow");
+  const readerDate = document.getElementById("readerDate");
+  const readerMsgId = document.getElementById("readerMsgId");
+
+  const readerAttachmentsBox = document.getElementById("readerAttachmentsBox");
+  const readerAttachmentCount = document.getElementById("readerAttachmentCount");
+  const readerAttachmentsList = document.getElementById("readerAttachmentsList");
+
+  const readerBodyTabs = document.querySelectorAll(".body-tab-btn");
+  const readerPaneHtml = document.getElementById("readerPaneHtml");
+  const readerPaneText = document.getElementById("readerPaneText");
+  const readerPaneHeaders = document.getElementById("readerPaneHeaders");
+  const readerHtmlFrame = document.getElementById("readerHtmlFrame");
+  const readerTextContent = document.getElementById("readerTextContent");
+  const readerHeadersContent = document.getElementById("readerHeadersContent");
+
+  async function loadMailboxFolders() {
+    try {
+      const res = await api("/mailbox/folders");
+      if (res.folders && res.folders.length > 0) {
+        mailboxFolderSelect.innerHTML = res.folders
+          .map((f) => `<option value="${escapeHtml(f)}" ${f === mailboxCurrentFolder ? "selected" : ""}>${escapeHtml(f)}</option>`)
+          .join("");
+        if (!res.folders.includes(mailboxCurrentFolder)) {
+          mailboxCurrentFolder = res.current_folder || res.folders[0];
+        }
+      }
+    } catch (err) {
+      console.error("Mailbox folders error:", err);
+    }
+  }
+
+  async function loadMailboxMessages() {
+    if (!mailboxTableBody) return;
+    mailboxTableBody.innerHTML = `<tr><td colspan="7" class="text-center empty-state"><span class="spin">&#9696;</span> Fetching emails from Exchange server...</td></tr>`;
+    try {
+      const qParam = mailboxSearch ? `&q=${encodeURIComponent(mailboxSearch)}` : "";
+      const res = await api(
+        `/mailbox/messages?folder=${encodeURIComponent(mailboxCurrentFolder)}&filter=${mailboxFilter}&page=${mailboxPage}&limit=${mailboxLimit}${qParam}`
+      );
+
+      mailboxCountBadge.textContent = `${res.total} email${res.total === 1 ? "" : "s"}`;
+
+      if (!res.messages || res.messages.length === 0) {
+        if (mailboxSearch) {
+          mailboxTableBody.innerHTML = `<tr><td colspan="7" class="text-center empty-state">No emails matching "<strong>${escapeHtml(mailboxSearch)}</strong>".</td></tr>`;
+        } else {
+          mailboxTableBody.innerHTML = `<tr><td colspan="7" class="text-center empty-state">No emails found in <strong>${escapeHtml(mailboxCurrentFolder)}</strong>.</td></tr>`;
+        }
+        mailboxPaginationInfo.textContent = "Showing 0 of 0 emails";
+        mailboxCurrentPageLabel.textContent = "Page 1 of 1";
+        btnMailboxPrevPage.disabled = true;
+        btnMailboxNextPage.disabled = true;
+        return;
+      }
+
+      const startItem = (res.page - 1) * res.limit + 1;
+      const endItem = Math.min(res.total, res.page * res.limit);
+      mailboxPaginationInfo.textContent = `Showing ${startItem}-${endItem} of ${res.total} emails`;
+      mailboxCurrentPageLabel.textContent = `Page ${res.page} of ${res.total_pages || 1}`;
+      btnMailboxPrevPage.disabled = res.page <= 1;
+      btnMailboxNextPage.disabled = res.page >= res.total_pages;
+
+      mailboxTableBody.innerHTML = res.messages
+        .map((msg) => {
+          const isUnread = !msg.is_seen;
+          const statusHtml = isUnread
+            ? `<span class="read-status-dot unread" title="Unread"></span><span style="color:var(--primary); font-weight:600;">Unread</span>`
+            : `<span class="read-status-dot read" title="Read"></span><span style="color:var(--text-muted);">Read</span>`;
+
+          const fwdHtml = msg.is_forwarded
+            ? `<span class="badge badge-success" title="Forwarded to target Gmail">&#10003; Forwarded</span>`
+            : `<span class="badge badge-neutral" title="Pending forwarding">Pending</span>`;
+
+          const attHtml = msg.has_attachments
+            ? `<span class="att-icon" title="Has Attachments">&#128206;</span>`
+            : "";
+
+          return `
+            <tr class="mailbox-table-row ${isUnread ? "unread" : ""}" data-uid="${msg.uid}">
+              <td>${statusHtml}</td>
+              <td>${fwdHtml}</td>
+              <td class="cell-sender" title="${escapeHtml(msg.from)}"><strong>${escapeHtml(msg.from || "Unknown")}</strong></td>
+              <td class="cell-subject" title="${escapeHtml(msg.subject)}">${escapeHtml(msg.subject || "(No Subject)")}${attHtml}</td>
+              <td>${escapeHtml(msg.date)}</td>
+              <td><span style="font-size:12px; color:var(--text-muted);">${escapeHtml(msg.size_formatted)}</span></td>
+              <td>
+                <div style="display:flex; gap:6px; align-items:center;">
+                  <button type="button" class="btn btn-sm btn-outline btn-msg-view" data-uid="${msg.uid}" title="View Email">View</button>
+                  <button type="button" class="btn btn-sm btn-outline btn-msg-fwd" data-uid="${msg.uid}" title="Forward to Gmail Now">&#10148;</button>
+                  <button type="button" class="btn btn-sm btn-outline btn-msg-read" data-uid="${msg.uid}" data-seen="${msg.is_seen}" title="${isUnread ? "Mark as Read" : "Mark as Unread"}">${isUnread ? "&#9993;" : "&#9992;"}</button>
+                </div>
+              </td>
+            </tr>
+          `;
+        })
+        .join("");
+
+      mailboxTableBody.querySelectorAll(".mailbox-table-row").forEach((row) => {
+        row.addEventListener("click", (e) => {
+          if (e.target.closest("button")) return;
+          const uid = parseInt(row.dataset.uid, 10);
+          openMailboxMessage(uid);
+        });
+      });
+
+      mailboxTableBody.querySelectorAll(".btn-msg-view").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          openMailboxMessage(parseInt(btn.dataset.uid, 10));
+        });
+      });
+
+      mailboxTableBody.querySelectorAll(".btn-msg-fwd").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          forwardMailboxEmail(parseInt(btn.dataset.uid, 10), btn);
+        });
+      });
+
+      mailboxTableBody.querySelectorAll(".btn-msg-read").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const uid = parseInt(btn.dataset.uid, 10);
+          const currentSeen = btn.dataset.seen === "true";
+          toggleMailboxReadStatus(uid, !currentSeen);
+        });
+      });
+    } catch (err) {
+      console.error("Mailbox messages error:", err);
+      mailboxTableBody.innerHTML = `
+        <tr>
+          <td colspan="7" class="text-center empty-state" style="color:var(--danger); padding:30px;">
+            <p><strong>Failed to load emails:</strong> ${escapeHtml(err.message)}</p>
+            <div style="margin-top:12px; display:flex; gap:8px; justify-content:center;">
+              <button type="button" class="btn btn-sm btn-outline" id="btnRetryMailbox">Retry</button>
+              <button type="button" class="btn btn-sm btn-primary" id="btnGoToExchangeConfig">Configure Exchange Settings</button>
+            </div>
+          </td>
+        </tr>
+      `;
+      const btnRetry = document.getElementById("btnRetryMailbox");
+      if (btnRetry) btnRetry.addEventListener("click", () => loadMailboxMessages());
+      const btnGo = document.getElementById("btnGoToExchangeConfig");
+      if (btnGo) {
+        btnGo.addEventListener("click", () => {
+          switchTab("exchange");
+        });
+      }
+    }
+  }
+
+  async function openMailboxMessage(uid) {
+    currentViewingUid = uid;
+    mailboxListView.classList.add("hidden");
+    mailboxReaderView.classList.remove("hidden");
+
+    readerSubject.textContent = "Loading email details...";
+    readerFrom.textContent = "--";
+    readerTo.textContent = "--";
+    readerCc.textContent = "--";
+    readerCcRow.classList.add("hidden");
+    readerDate.textContent = "--";
+    readerMsgId.textContent = "--";
+    readerAttachmentsBox.classList.add("hidden");
+    readerAttachmentsList.innerHTML = "";
+    readerHtmlFrame.srcdoc = "<html><body style='font-family:sans-serif; color:#64748b; padding:20px;'>Loading body...</body></html>";
+    readerTextContent.textContent = "Loading...";
+    readerHeadersContent.textContent = "Loading...";
+
+    try {
+      const msg = await api(
+        `/mailbox/message?folder=${encodeURIComponent(mailboxCurrentFolder)}&uid=${uid}`
+      );
+      currentViewingMessage = msg;
+
+      readerSubject.textContent = msg.subject || "(No Subject)";
+      readerFrom.textContent = msg.from || "Unknown";
+      readerTo.textContent = msg.to || "Unknown";
+      if (msg.cc && msg.cc.trim()) {
+        readerCc.textContent = msg.cc;
+        readerCcRow.classList.remove("hidden");
+      } else {
+        readerCcRow.classList.add("hidden");
+      }
+      readerDate.textContent = msg.date;
+      readerMsgId.textContent = msg.message_id || "N/A";
+
+      readerSeenBadge.textContent = msg.is_seen ? "Read" : "Unread";
+      readerSeenBadge.className = msg.is_seen ? "badge badge-neutral" : "badge badge-primary";
+      btnReaderToggleReadText.textContent = msg.is_seen ? "Mark as Unread" : "Mark as Read";
+
+      readerForwardedBadge.textContent = msg.is_forwarded ? "Forwarded" : "Not Forwarded";
+      readerForwardedBadge.className = msg.is_forwarded ? "badge badge-success" : "badge badge-neutral";
+
+      btnReaderDownloadRaw.href = `/api/mailbox/raw?folder=${encodeURIComponent(mailboxCurrentFolder)}&uid=${uid}`;
+
+      if (msg.attachments && msg.attachments.length > 0) {
+        readerAttachmentsBox.classList.remove("hidden");
+        readerAttachmentCount.textContent = msg.attachments.length;
+        readerAttachmentsList.innerHTML = msg.attachments
+          .map(
+            (att) => `
+          <div class="attachment-chip">
+            <span style="font-size:14px;">&#128206;</span>
+            <span class="att-name" title="${escapeHtml(att.filename)}">${escapeHtml(att.filename)}</span>
+            <span class="att-size">(${escapeHtml(att.size_formatted)})</span>
+            <a class="att-dl-btn" href="/api/mailbox/attachment?folder=${encodeURIComponent(mailboxCurrentFolder)}&uid=${uid}&index=${att.index}" download="${escapeHtml(att.filename)}">Download</a>
+          </div>
+        `
+          )
+          .join("");
+      } else {
+        readerAttachmentsBox.classList.add("hidden");
+      }
+
+      readerTextContent.textContent = msg.body_text || "(Empty plain text body)";
+      readerHeadersContent.textContent = msg.raw_headers || "";
+
+      if (msg.body_html) {
+        switchBodyTab("html");
+        const safeHtml = `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="utf-8">
+            <base target="_blank">
+            <style>
+              body {
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+                font-size: 14px;
+                line-height: 1.5;
+                color: #1e293b;
+                margin: 16px;
+                word-break: break-word;
+              }
+              img { max-width: 100%; height: auto; }
+              table { max-width: 100%; }
+            </style>
+          </head>
+          <body>${msg.body_html}</body>
+          </html>
+        `;
+        readerHtmlFrame.srcdoc = safeHtml;
+      } else {
+        switchBodyTab("text");
+        readerHtmlFrame.srcdoc = "<html><body style='font-family:sans-serif; color:#64748b; padding:20px;'>(No HTML version available for this email)</body></html>";
+      }
+    } catch (err) {
+      showAlert(`Failed to load email: ${err.message}`, "error");
+      closeMailboxReader();
+    }
+  }
+
+  function closeMailboxReader() {
+    mailboxReaderView.classList.add("hidden");
+    mailboxListView.classList.remove("hidden");
+    currentViewingUid = null;
+    currentViewingMessage = null;
+    loadMailboxMessages();
+  }
+
+  function switchBodyTab(tabName) {
+    readerBodyTabs.forEach((btn) => {
+      btn.classList.toggle("active", btn.dataset.body === tabName);
+    });
+    readerPaneHtml.classList.toggle("hidden", tabName !== "html");
+    readerPaneText.classList.toggle("hidden", tabName !== "text");
+    readerPaneHeaders.classList.toggle("hidden", tabName !== "headers");
+  }
+
+  async function forwardMailboxEmail(uid, btn) {
+    const origText = btn ? btn.innerHTML : null;
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spin">&#9696;</span>';
+    }
+    try {
+      const res = await api("/mailbox/forward", {
+        method: "POST",
+        body: JSON.stringify({ folder: mailboxCurrentFolder, uid }),
+      });
+      showAlert(`Email forwarded successfully to ${res.forwarded_to}!`, "success");
+      if (currentViewingUid === uid && currentViewingMessage) {
+        currentViewingMessage.is_forwarded = true;
+        readerForwardedBadge.textContent = "Forwarded";
+        readerForwardedBadge.className = "badge badge-success";
+      }
+      loadMailboxMessages();
+    } catch (err) {
+      showAlert(`Forward failed: ${err.message}`, "error");
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = origText;
+      }
+    }
+  }
+
+  async function toggleMailboxReadStatus(uid, seen) {
+    try {
+      await api("/mailbox/mark-read", {
+        method: "POST",
+        body: JSON.stringify({ folder: mailboxCurrentFolder, uid, seen }),
+      });
+      showAlert(`Email marked as ${seen ? "read" : "unread"}.`, "success", 3000);
+      if (currentViewingUid === uid && currentViewingMessage) {
+        currentViewingMessage.is_seen = seen;
+        readerSeenBadge.textContent = seen ? "Read" : "Unread";
+        readerSeenBadge.className = seen ? "badge badge-neutral" : "badge badge-primary";
+        btnReaderToggleReadText.textContent = seen ? "Mark as Unread" : "Mark as Read";
+      }
+      loadMailboxMessages();
+    } catch (err) {
+      showAlert(`Failed to update read status: ${err.message}`, "error");
+    }
+  }
+
+  // Mailbox Event Listeners
+  if (mailboxFolderSelect) {
+    mailboxFolderSelect.addEventListener("change", () => {
+      mailboxCurrentFolder = mailboxFolderSelect.value;
+      mailboxPage = 1;
+      loadMailboxMessages();
+    });
+  }
+
+  mailboxFilterPills.forEach((pill) => {
+    pill.addEventListener("click", () => {
+      mailboxFilterPills.forEach((p) => p.classList.remove("active"));
+      pill.classList.add("active");
+      mailboxFilter = pill.dataset.filter;
+      mailboxPage = 1;
+      loadMailboxMessages();
+    });
+  });
+
+  if (mailboxSearchInput) {
+    mailboxSearchInput.addEventListener("input", () => {
+      const val = mailboxSearchInput.value.trim();
+      btnMailboxSearchClear.classList.toggle("hidden", val.length === 0);
+      clearTimeout(mailboxSearchTimer);
+      mailboxSearchTimer = setTimeout(() => {
+        mailboxSearch = val;
+        mailboxPage = 1;
+        loadMailboxMessages();
+      }, 400);
+    });
+  }
+
+  if (btnMailboxSearchClear) {
+    btnMailboxSearchClear.addEventListener("click", () => {
+      mailboxSearchInput.value = "";
+      btnMailboxSearchClear.classList.add("hidden");
+      mailboxSearch = "";
+      mailboxPage = 1;
+      loadMailboxMessages();
+    });
+  }
+
+  if (btnRefreshMailbox) {
+    btnRefreshMailbox.addEventListener("click", () => {
+      loadMailboxFolders();
+      loadMailboxMessages();
+    });
+  }
+
+  if (mailboxPageLimit) {
+    mailboxPageLimit.addEventListener("change", () => {
+      mailboxLimit = parseInt(mailboxPageLimit.value, 10) || 20;
+      mailboxPage = 1;
+      loadMailboxMessages();
+    });
+  }
+
+  if (btnMailboxPrevPage) {
+    btnMailboxPrevPage.addEventListener("click", () => {
+      if (mailboxPage > 1) {
+        mailboxPage -= 1;
+        loadMailboxMessages();
+      }
+    });
+  }
+
+  if (btnMailboxNextPage) {
+    btnMailboxNextPage.addEventListener("click", () => {
+      mailboxPage += 1;
+      loadMailboxMessages();
+    });
+  }
+
+  if (btnBackToMailboxList) {
+    btnBackToMailboxList.addEventListener("click", () => {
+      closeMailboxReader();
+    });
+  }
+
+  if (btnReaderForward) {
+    btnReaderForward.addEventListener("click", () => {
+      if (currentViewingUid) {
+        forwardMailboxEmail(currentViewingUid, btnReaderForward);
+      }
+    });
+  }
+
+  if (btnReaderToggleRead) {
+    btnReaderToggleRead.addEventListener("click", () => {
+      if (currentViewingUid && currentViewingMessage) {
+        toggleMailboxReadStatus(currentViewingUid, !currentViewingMessage.is_seen);
+      }
+    });
+  }
+
+  readerBodyTabs.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      switchBodyTab(btn.dataset.body);
+    });
+  });
+
 
   function escapeHtml(str) {
     if (!str) return "";

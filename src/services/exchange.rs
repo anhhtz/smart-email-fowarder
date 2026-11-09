@@ -12,6 +12,14 @@ pub struct FetchedEmail {
     pub raw_bytes: Vec<u8>,
 }
 
+#[derive(Debug, Clone)]
+pub struct FetchedMailboxSummary {
+    pub uid: u32,
+    pub is_seen: bool,
+    pub size_bytes: u64,
+    pub raw_header_bytes: Vec<u8>,
+}
+
 pub struct ExchangeClient;
 
 impl ExchangeClient {
@@ -102,24 +110,246 @@ impl ExchangeClient {
             .map_err(|_| "Fetch operation timed out after 60 seconds".to_string())?
     }
 
-    pub async fn mark_as_read(cfg: &ExchangeConfig, uid: u32) -> Result<(), String> {
+    pub async fn list_folders(cfg: &ExchangeConfig) -> Result<Vec<String>, String> {
         let fut = async {
             let mut session = Self::connect(cfg).await?;
+            let mut folders = Vec::new();
+            if let Ok(mut stream) = session.list(Some(""), Some("*")).await {
+                while let Ok(Some(folder)) = stream.try_next().await {
+                    let name = folder.name().to_string();
+                    if !name.trim().is_empty() && !folders.contains(&name) {
+                        folders.push(name);
+                    }
+                }
+            }
+            let _ = session.logout().await;
+
+            if !folders.contains(&cfg.folder) {
+                folders.insert(0, cfg.folder.clone());
+            }
+            if !folders.contains(&"INBOX".to_string()) {
+                folders.push("INBOX".to_string());
+            }
+            Ok(folders)
+        };
+
+        timeout(Duration::from_secs(15), fut)
+            .await
+            .map_err(|_| "Folder list operation timed out after 15 seconds".to_string())?
+    }
+
+    pub async fn fetch_mailbox_messages(
+        cfg: &ExchangeConfig,
+        folder: &str,
+        filter: &str,
+        page: usize,
+        limit: usize,
+        search_query: Option<&str>,
+    ) -> Result<(usize, Vec<FetchedMailboxSummary>), String> {
+        let fut = async {
+            let mut session = Self::connect(cfg).await?;
+            let target_folder = if folder.trim().is_empty() {
+                &cfg.folder
+            } else {
+                folder
+            };
             session
-                .select(&cfg.folder)
+                .select(target_folder)
                 .await
-                .map_err(|e| format!("Failed to select folder '{}': {}", cfg.folder, e))?;
+                .map_err(|e| format!("Failed to select folder '{}': {}", target_folder, e))?;
+
+            let uids: HashSet<u32> = if let Some(q) = search_query.map(|s| s.trim()).filter(|s| !s.is_empty()) {
+                let clean_q: String = q
+                    .chars()
+                    .filter(|c| c.is_alphanumeric() || *c == ' ' || *c == '@' || *c == '.')
+                    .collect();
+                match session.uid_search(&format!("TEXT \"{}\"", clean_q)).await {
+                    Ok(found) => found,
+                    Err(_) => session
+                        .uid_search("ALL")
+                        .await
+                        .map_err(|e| format!("IMAP search failed: {}", e))?,
+                }
+            } else {
+                match filter.to_lowercase().as_str() {
+                    "unseen" => session
+                        .uid_search("UNSEEN")
+                        .await
+                        .map_err(|e| format!("IMAP search unseen failed: {}", e))?,
+                    "seen" => session
+                        .uid_search("SEEN")
+                        .await
+                        .map_err(|e| format!("IMAP search seen failed: {}", e))?,
+                    _ => session
+                        .uid_search("ALL")
+                        .await
+                        .map_err(|e| format!("IMAP search ALL failed: {}", e))?,
+                }
+            };
+
+            if uids.is_empty() {
+                let _ = session.logout().await;
+                return Ok((0, Vec::new()));
+            }
+
+            let mut sorted_uids: Vec<u32> = uids.into_iter().collect();
+            sorted_uids.sort_by(|a, b| b.cmp(a));
+
+            let total = sorted_uids.len();
+            let limit = limit.clamp(1, 100);
+            let page = page.max(1);
+            let start = (page - 1) * limit;
+
+            if start >= total {
+                let _ = session.logout().await;
+                return Ok((total, Vec::new()));
+            }
+
+            let end = std::cmp::min(start + limit, total);
+            let page_uids = &sorted_uids[start..end];
+
+            let uid_str = page_uids
+                .iter()
+                .map(|u| u.to_string())
+                .collect::<Vec<_>>()
+                .join(",");
+
+            let mut stream = session
+                .uid_fetch(&uid_str, "(BODY.PEEK[HEADER] UID FLAGS RFC822.SIZE)")
+                .await
+                .map_err(|e| format!("IMAP uid_fetch header failed: {}", e))?;
+
+            let mut fetched_map = std::collections::HashMap::new();
+
+            while let Some(fetch) = stream
+                .try_next()
+                .await
+                .map_err(|e| format!("Error streaming fetch headers: {}", e))?
+            {
+                let uid = fetch.uid.unwrap_or(0);
+                let is_seen = fetch.flags().any(|f| f == async_imap::types::Flag::Seen);
+                let size_bytes = fetch.size.map(|s| s as u64).unwrap_or(0);
+                let raw_header_bytes = fetch.header().map(|h| h.to_vec()).unwrap_or_else(|| {
+                    fetch.body().map(|b| b.to_vec()).unwrap_or_default()
+                });
+
+                fetched_map.insert(
+                    uid,
+                    FetchedMailboxSummary {
+                        uid,
+                        is_seen,
+                        size_bytes,
+                        raw_header_bytes,
+                    },
+                );
+            }
+
+            drop(stream);
+            let _ = session.logout().await;
+
+            let mut results = Vec::new();
+            for u in page_uids {
+                if let Some(item) = fetched_map.remove(u) {
+                    results.push(item);
+                }
+            }
+
+            Ok((total, results))
+        };
+
+        timeout(Duration::from_secs(30), fut)
+            .await
+            .map_err(|_| "Fetch mailbox messages operation timed out after 30 seconds".to_string())?
+    }
+
+    pub async fn fetch_single_email_full(
+        cfg: &ExchangeConfig,
+        folder: &str,
+        uid: u32,
+    ) -> Result<(bool, Vec<u8>), String> {
+        let fut = async {
+            let mut session = Self::connect(cfg).await?;
+            let target_folder = if folder.trim().is_empty() {
+                &cfg.folder
+            } else {
+                folder
+            };
+            session
+                .select(target_folder)
+                .await
+                .map_err(|e| format!("Failed to select folder '{}': {}", target_folder, e))?;
 
             let uid_str = uid.to_string();
-            let mut updates = session
-                .uid_store(&uid_str, "+FLAGS (\\Seen)")
+            let mut stream = session
+                .uid_fetch(&uid_str, "(BODY.PEEK[] UID FLAGS)")
                 .await
-                .map_err(|e| format!("Failed to set \\Seen flag for UID {}: {}", uid, e))?;
+                .map_err(|e| format!("IMAP uid_fetch failed for UID {}: {}", uid, e))?;
+
+            let mut is_seen = false;
+            let mut raw_bytes = Vec::new();
+
+            if let Some(fetch) = stream
+                .try_next()
+                .await
+                .map_err(|e| format!("Error fetching message UID {}: {}", uid, e))?
+            {
+                is_seen = fetch.flags().any(|f| f == async_imap::types::Flag::Seen);
+                if let Some(b) = fetch.body() {
+                    raw_bytes = b.to_vec();
+                } else if let Some(t) = fetch.text() {
+                    raw_bytes = t.to_vec();
+                }
+            }
+
+            drop(stream);
+            let _ = session.logout().await;
+
+            if raw_bytes.is_empty() {
+                return Err(format!("Email with UID {} was not found or has empty body", uid));
+            }
+
+            Ok((is_seen, raw_bytes))
+        };
+
+        timeout(Duration::from_secs(30), fut)
+            .await
+            .map_err(|_| format!("Timed out fetching full email for UID {}", uid))?
+    }
+
+    pub async fn set_read_status(
+        cfg: &ExchangeConfig,
+        folder: &str,
+        uid: u32,
+        seen: bool,
+    ) -> Result<(), String> {
+        let fut = async {
+            let mut session = Self::connect(cfg).await?;
+            let target_folder = if folder.trim().is_empty() {
+                &cfg.folder
+            } else {
+                folder
+            };
+            session
+                .select(target_folder)
+                .await
+                .map_err(|e| format!("Failed to select folder '{}': {}", target_folder, e))?;
+
+            let uid_str = uid.to_string();
+            let flag_cmd = if seen {
+                "+FLAGS (\\Seen)"
+            } else {
+                "-FLAGS (\\Seen)"
+            };
+
+            let mut updates = session
+                .uid_store(&uid_str, flag_cmd)
+                .await
+                .map_err(|e| format!("Failed to update flags for UID {}: {}", uid, e))?;
 
             while let Some(_) = updates
                 .try_next()
                 .await
-                .map_err(|e| format!("Error updating \\Seen flag: {}", e))? {}
+                .map_err(|e| format!("Error updating flag: {}", e))? {}
 
             drop(updates);
             let _ = session.logout().await;
@@ -128,8 +358,13 @@ impl ExchangeClient {
 
         timeout(Duration::from_secs(15), fut)
             .await
-            .map_err(|_| format!("Timed out marking UID {} as read", uid))?
+            .map_err(|_| format!("Timed out updating read status for UID {}", uid))?
     }
+
+    pub async fn mark_as_read(cfg: &ExchangeConfig, uid: u32) -> Result<(), String> {
+        Self::set_read_status(cfg, &cfg.folder, uid, true).await
+    }
+
 
     async fn connect(
         cfg: &ExchangeConfig,

@@ -28,6 +28,13 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
           <span>Dashboard</span>
         </button>
+        <button class="nav-item" data-tab="mailbox">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/>
+            <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>
+          </svg>
+          <span>Email Browser</span>
+        </button>
         <button class="nav-item" data-tab="process">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/>
@@ -44,10 +51,6 @@
         <button class="nav-item" data-tab="forwarding">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 17 20 12 15 7"/><path d="M4 18v-2a4 4 0 0 1 4-4h12"/></svg>
           <span>Forwarding Rules</span>
-        </button>
-        <button class="nav-item" data-tab="smtp">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-          <span>Exchange Relay</span>
         </button>
         <button class="nav-item" data-tab="logs">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
@@ -155,8 +158,191 @@
         </div>
       </section>
 
+      <!-- Tab Content: Email Browser -->
+      <section id="tab-mailbox" class="tab-pane">
+        <!-- Mailbox List View -->
+        <div id="mailboxListView">
+          <!-- Toolbar -->
+          <div class="mailbox-toolbar">
+            <div class="mailbox-toolbar-left">
+              <div class="folder-select-wrapper">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                </svg>
+                <select id="mailboxFolderSelect" class="folder-select" title="Select Folder">
+                  <option value="INBOX">INBOX</option>
+                </select>
+              </div>
+
+              <div class="pill-group" id="mailboxFilterPills">
+                <button type="button" class="pill-btn active" data-filter="all">All</button>
+                <button type="button" class="pill-btn" data-filter="unseen">Unread</button>
+                <button type="button" class="pill-btn" data-filter="seen">Read</button>
+              </div>
+            </div>
+
+            <div class="search-input-group">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              <input type="text" id="mailboxSearchInput" placeholder="Search subject or sender..." autocomplete="off">
+              <button type="button" class="search-clear-btn hidden" id="btnMailboxSearchClear" title="Clear search">&times;</button>
+            </div>
+
+            <div class="mailbox-toolbar-right">
+              <button type="button" class="btn btn-outline btn-sm" id="btnRefreshMailbox">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="23 4 23 10 17 10"/>
+                  <polyline points="1 20 1 14 7 14"/>
+                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                </svg>
+                <span>Refresh</span>
+              </button>
+              <span class="badge badge-neutral" id="mailboxCountBadge">0 emails</span>
+            </div>
+          </div>
+
+          <!-- Email Table Card -->
+          <div class="content-card">
+            <div class="table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th style="width: 85px;">Status</th>
+                    <th style="width: 120px;">Forwarded</th>
+                    <th style="width: 200px;">Sender</th>
+                    <th>Subject</th>
+                    <th style="width: 160px;">Date</th>
+                    <th style="width: 85px;">Size</th>
+                    <th style="width: 150px;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="mailboxTableBody">
+                  <tr>
+                    <td colspan="7" class="text-center empty-state">Loading emails from Exchange mailbox...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Pagination Bar -->
+            <div class="pagination-bar" id="mailboxPagination">
+              <div id="mailboxPaginationInfo">Showing 0 of 0 emails</div>
+              <div class="pagination-controls">
+                <label for="mailboxPageLimit" style="font-size: 12px; color: var(--text-muted);">Per page:</label>
+                <select id="mailboxPageLimit" class="form-select" style="padding: 4px 8px; font-size: 12px; border-radius: 4px; border: 1px solid var(--border-color);">
+                  <option value="20" selected>20</option>
+                  <option value="50">50</option>
+                  <option value="100">100</option>
+                </select>
+                <button type="button" class="btn btn-sm btn-outline" id="btnMailboxPrevPage" disabled>&larr; Prev</button>
+                <span id="mailboxCurrentPageLabel" style="font-weight: 600; padding: 0 4px;">Page 1 of 1</span>
+                <button type="button" class="btn btn-sm btn-outline" id="btnMailboxNextPage" disabled>Next &rarr;</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mailbox Reader View (Detail) -->
+        <div id="mailboxReaderView" class="hidden">
+          <div class="email-reader-card">
+            <div class="reader-toolbar">
+              <button type="button" class="btn btn-outline btn-sm" id="btnBackToMailboxList">
+                <span>&larr; Back to Email List</span>
+              </button>
+              <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                <button type="button" class="btn btn-primary btn-sm" id="btnReaderForward">
+                  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="22" y1="2" x2="11" y2="13"/>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                  </svg>
+                  <span>Forward to Gmail Now</span>
+                </button>
+                <button type="button" class="btn btn-outline btn-sm" id="btnReaderToggleRead">
+                  <span id="btnReaderToggleReadText">Mark as Unread</span>
+                </button>
+                <a class="btn btn-outline btn-sm" id="btnReaderDownloadRaw" download="email.eml" title="Download raw MIME email">
+                  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                  </svg>
+                  <span>Download .eml</span>
+                </a>
+              </div>
+            </div>
+
+            <div class="reader-header">
+              <div class="reader-title-row">
+                <h2 id="readerSubject">(No Subject)</h2>
+                <div class="reader-badges">
+                  <span class="badge badge-primary" id="readerSeenBadge">Unread</span>
+                  <span class="badge badge-success" id="readerForwardedBadge">Forwarded</span>
+                </div>
+              </div>
+
+              <div class="reader-meta-grid">
+                <div class="reader-meta-item">
+                  <span class="reader-meta-label">From:</span>
+                  <span class="reader-meta-val"><strong id="readerFrom">--</strong></span>
+                </div>
+                <div class="reader-meta-item">
+                  <span class="reader-meta-label">To:</span>
+                  <span class="reader-meta-val" id="readerTo">--</span>
+                </div>
+                <div class="reader-meta-item" id="readerCcRow">
+                  <span class="reader-meta-label">CC:</span>
+                  <span class="reader-meta-val" id="readerCc">--</span>
+                </div>
+                <div class="reader-meta-item">
+                  <span class="reader-meta-label">Date:</span>
+                  <span class="reader-meta-val" id="readerDate">--</span>
+                </div>
+                <div class="reader-meta-item" style="grid-column: 1 / -1;">
+                  <span class="reader-meta-label">Message-ID:</span>
+                  <span class="reader-meta-val"><code id="readerMsgId" style="font-size: 11px;">--</code></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Attachments Panel -->
+            <div id="readerAttachmentsBox" class="reader-attachments-box hidden">
+              <div class="reader-attachments-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;">
+                  <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+                </svg>
+                <span>Attachments (<span id="readerAttachmentCount">0</span>)</span>
+              </div>
+              <div class="attachments-chip-grid" id="readerAttachmentsList"></div>
+            </div>
+
+            <!-- Body View Tabs -->
+            <div class="reader-body-tabs">
+              <button type="button" class="body-tab-btn active" data-body="html" id="tabBtnHtml">Rendered HTML</button>
+              <button type="button" class="body-tab-btn" data-body="text" id="tabBtnText">Plain Text</button>
+              <button type="button" class="body-tab-btn" data-tab="headers" id="tabBtnHeaders">Raw Headers</button>
+            </div>
+
+            <!-- Body Content Panes -->
+            <div class="reader-body-container">
+              <div id="readerPaneHtml">
+                <iframe id="readerHtmlFrame" sandbox="allow-same-origin allow-popups" class="email-iframe" title="Email Body"></iframe>
+              </div>
+              <div id="readerPaneText" class="hidden">
+                <pre class="email-plain-text" id="readerTextContent"></pre>
+              </div>
+              <div id="readerPaneHeaders" class="hidden">
+                <pre class="email-headers-view" id="readerHeadersContent"></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- Tab Content: Process Monitor -->
       <section id="tab-process" class="tab-pane">
+
         <!-- Process Overview Hero Banner -->
         <div class="process-hero-card">
           <div class="process-hero-info">
@@ -354,26 +540,26 @@
               </div>
             </div>
 
-            <!-- SMTP Relay Subsystem -->
+            <!-- Outbound Mailer Subsystem -->
             <div class="subsystem-card">
               <div class="subsystem-header">
                 <div class="subsystem-title">
                   <span class="status-dot active" id="subSmtpDot"></span>
-                  <h4>Outbound SMTP Relay</h4>
+                  <h4>Outbound Mailer (Exchange)</h4>
                 </div>
                 <span class="badge badge-neutral" id="subSmtpBadge">Checking...</span>
               </div>
               <div class="subsystem-body">
                 <div class="subsystem-row">
-                  <span>Relay Server:</span>
+                  <span>Server & Port:</span>
                   <span id="subSmtpHost">--</span>
                 </div>
                 <div class="subsystem-row">
-                  <span>Relay Port & Sec:</span>
+                  <span>Encryption:</span>
                   <span id="subSmtpPortSec">--</span>
                 </div>
                 <div class="subsystem-row">
-                  <span>Relay Sender:</span>
+                  <span>Sender Address:</span>
                   <span id="subSmtpSender">--</span>
                 </div>
               </div>
@@ -456,8 +642,8 @@
       <section id="tab-exchange" class="tab-pane">
         <div class="content-card">
           <div class="card-header">
-            <h3>Internal Exchange Mailbox Connection</h3>
-            <p class="card-desc">Configure the IMAP connection to access your internal MS Exchange mailbox.</p>
+            <h3>Internal Exchange Mailbox & Outbound Forwarder</h3>
+            <p class="card-desc">Configure your internal MS Exchange mailbox credentials. This account is used to ingest incoming emails and forward them out to Gmail.</p>
           </div>
           <form id="formExchange" class="form-grid">
             <div class="form-group col-6">
@@ -466,12 +652,12 @@
               <small>FQDN or IP address of the Exchange Server on the local network.</small>
             </div>
             <div class="form-group col-3">
-              <label for="exchangePort">IMAP Port</label>
+              <label for="exchangePort">Inbound IMAP Port</label>
               <input type="number" id="exchangePort" name="port" value="993" required>
               <small>993 for SSL/TLS, 143 for STARTTLS/plain.</small>
             </div>
             <div class="form-group col-3">
-              <label for="exchangeSecurity">Encryption</label>
+              <label for="exchangeSecurity">Inbound Security</label>
               <select id="exchangeSecurity" name="security">
                 <option value="ssl">SSL / TLS (Port 993)</option>
                 <option value="starttls">STARTTLS (Port 143)</option>
@@ -482,11 +668,35 @@
             <div class="form-group col-6">
               <label for="exchangeUsername">Username / Domain Account</label>
               <input type="text" id="exchangeUsername" name="username" placeholder="domain\username or user@company.com" required>
+              <small>Your Exchange mailbox credentials used for receiving and sending.</small>
             </div>
             <div class="form-group col-6">
               <label for="exchangePassword">Mailbox Password</label>
               <input type="password" id="exchangePassword" name="password" placeholder="••••••••">
               <small>Leave blank to keep existing stored password.</small>
+            </div>
+
+            <div class="form-group col-3">
+              <label for="exchangeSmtpPort">Outbound SMTP Port</label>
+              <input type="number" id="exchangeSmtpPort" name="smtp_port" value="587" required>
+              <small>587 (STARTTLS), 25 (Standard), or 465 (SSL).</small>
+            </div>
+            <div class="form-group col-3">
+              <label for="exchangeSmtpSecurity">Outbound Security</label>
+              <select id="exchangeSmtpSecurity" name="smtp_security">
+                <option value="starttls">STARTTLS (Port 587)</option>
+                <option value="plain">None / Plain (Port 25)</option>
+                <option value="ssl">SSL / TLS (Port 465)</option>
+              </select>
+            </div>
+            <div class="form-group col-3">
+              <label for="exchangeFromEmail">Sender Email (Optional)</label>
+              <input type="email" id="exchangeFromEmail" name="from_email" placeholder="user@company.com">
+              <small>Defaults to mailbox username.</small>
+            </div>
+            <div class="form-group col-3">
+              <label for="exchangeFromName">Sender Display Name</label>
+              <input type="text" id="exchangeFromName" name="from_name" value="Exchange Email Forwarder">
             </div>
 
             <div class="form-group col-4">
@@ -510,9 +720,14 @@
             </div>
 
             <div class="form-actions col-12 flex-between">
-              <button type="button" class="btn btn-outline" id="btnTestExchange">
-                <span>&#128269;</span> Test Exchange Connection
-              </button>
+              <div style="display: flex; gap: 8px;">
+                <button type="button" class="btn btn-outline" id="btnTestExchange">
+                  <span>&#128269;</span> Test Mailbox Access
+                </button>
+                <button type="button" class="btn btn-outline" id="btnTestSmtp">
+                  <span>&#9993;</span> Send Test Email to Target Gmail
+                </button>
+              </div>
               <button type="submit" class="btn btn-primary">Save Exchange Settings</button>
             </div>
           </form>
@@ -560,92 +775,11 @@
               </label>
             </div>
 
-            <div class="form-actions col-12">
-              <button type="submit" class="btn btn-primary">Save Forwarding Rules</button>
-            </div>
-          </form>
-        </div>
-      </section>
-
-      <!-- Tab Content: Exchange SMTP Relay -->
-      <section id="tab-smtp" class="tab-pane">
-        <div class="content-card">
-          <div class="card-header">
-            <h3>Internal Exchange SMTP Relay</h3>
-            <p class="card-desc">Configure the outbound SMTP connection to the Internal Exchange Server to relay emails to Gmail.</p>
-          </div>
-          <form id="formSmtp" class="form-grid">
-            <div class="form-group col-6">
-              <label for="smtpHost">Exchange Relay Host / IP</label>
-              <input type="text" id="smtpHost" name="host" placeholder="mail.company.local or 192.168.1.10" required>
-              <small>Internal Exchange server host or IP address.</small>
-            </div>
-            <div class="form-group col-3">
-              <label for="smtpPort">SMTP Port</label>
-              <input type="number" id="smtpPort" name="port" value="25" required>
-              <small>25 (standard internal relay), 587 (STARTTLS), or 465 (SSL).</small>
-            </div>
-            <div class="form-group col-3">
-              <label for="smtpSecurity">Encryption</label>
-              <select id="smtpSecurity" name="security">
-                <option value="plain">None / Plain (Port 25)</option>
-                <option value="starttls">STARTTLS (Port 587)</option>
-                <option value="ssl">SSL / TLS (Port 465)</option>
-              </select>
-            </div>
-
-            <div class="form-group col-6">
-              <label for="smtpFromEmail">Sender From Address</label>
-              <input type="email" id="smtpFromEmail" name="from_email" placeholder="forwarder@company.com" required>
-              <small>Authorized sender address on the Exchange server.</small>
-            </div>
-            <div class="form-group col-6">
-              <label for="smtpFromName">Sender Display Name</label>
-              <input type="text" id="smtpFromName" name="from_name" value="Exchange Email Forwarder">
-            </div>
-
-            <div class="form-group col-12 flex-center-vert">
-              <label class="toggle-control">
-                <input type="checkbox" id="smtpAuthRequired" name="auth_required">
-                <span class="toggle-slider"></span>
-                <span class="toggle-label">Relay Requires Authentication (Check if not an open internal relay)</span>
-              </label>
-            </div>
-
-            <div id="smtpAuthFields" class="form-row col-12 hidden">
-              <div class="form-group col-12 flex-center-vert" style="margin-top: 4px; margin-bottom: 8px;">
-                <label class="toggle-control">
-                  <input type="checkbox" id="smtpUseExchangeCredentials" name="use_exchange_credentials">
-                  <span class="toggle-slider"></span>
-                  <span class="toggle-label">Use same credentials as Exchange Mailbox</span>
-                </label>
-              </div>
-
-              <div id="smtpExchangeCredentialsInfo" class="form-group col-12 hidden">
-                <div class="credentials-badge-info">
-                  <span class="info-icon">&#10003;</span>
-                  <span>Authenticating with Exchange Mailbox account: <strong id="exchangeAccountDisplay">None</strong></span>
-                </div>
-              </div>
-
-              <div id="smtpCustomCredentials" class="form-row col-12">
-                <div class="form-group col-6">
-                  <label for="smtpUsername">SMTP Username</label>
-                  <input type="text" id="smtpUsername" name="username" placeholder="user@company.com">
-                </div>
-                <div class="form-group col-6">
-                  <label for="smtpPassword">SMTP Password</label>
-                  <input type="password" id="smtpPassword" name="password" placeholder="••••••••">
-                  <small>Leave blank to keep existing stored password.</small>
-                </div>
-              </div>
-            </div>
-
             <div class="form-actions col-12 flex-between">
-              <button type="button" class="btn btn-outline" id="btnTestSmtp">
+              <button type="button" class="btn btn-outline" id="btnTestForwarding">
                 <span>&#9993;</span> Send Test Email to Target Gmail
               </button>
-              <button type="submit" class="btn btn-primary">Save Relay Settings</button>
+              <button type="submit" class="btn btn-primary">Save Forwarding Rules</button>
             </div>
           </form>
         </div>

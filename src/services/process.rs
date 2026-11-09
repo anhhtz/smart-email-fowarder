@@ -281,30 +281,29 @@ pub async fn collect_health_report(
         });
     }
 
-    // 5. Outbound Exchange SMTP Relay Configuration
-    if let Some(ref sm) = cfg.smtp {
-        let auth_desc = if sm.use_exchange_credentials {
-            "Auth: Exchange Mailbox Credentials"
-        } else if sm.auth_required {
-            "Auth: Custom SMTP Credentials"
-        } else {
-            "Auth: No"
-        };
+    // 5. Outbound Sending Configuration (Exchange Mailbox default)
+    let outbound_cfg = cfg.smtp.as_ref().map(|s| {
+        s.resolve_with_exchange(cfg.exchange.as_ref())
+    }).or_else(|| {
+        cfg.exchange.as_ref().map(|e| e.to_smtp_config())
+    });
+
+    if let Some(ref sm) = outbound_cfg {
         checks.push(SubsystemHealthCheck {
-            name: "Outbound SMTP Relay".to_string(),
+            name: "Outbound Mailer (Exchange)".to_string(),
             status: "UP".to_string(),
             latency_ms: 0.0,
             message: format!(
-                "Configured: {}:{} ({}, {}), Sender: '{}'",
-                sm.host, sm.port, sm.security, auth_desc, sm.from_email
+                "Configured: {}:{} ({}), Sender: '{}'",
+                sm.host, sm.port, sm.security, sm.from_email
             ),
         });
     } else {
         checks.push(SubsystemHealthCheck {
-            name: "Outbound SMTP Relay".to_string(),
+            name: "Outbound Mailer (Exchange)".to_string(),
             status: "WARN".to_string(),
             latency_ms: 0.0,
-            message: "SMTP relay parameters not yet configured in settings".to_string(),
+            message: "Outbound parameters not yet configured (set in Exchange Mailbox)".to_string(),
         });
     }
 

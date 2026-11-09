@@ -41,6 +41,13 @@ pub fn build_router_with_start(
         .route("/poller/resume", post(routes::resume_poller))
         .route("/logs", get(routes::get_logs))
         .route("/system-logs", get(routes::get_system_logs))
+        .route("/mailbox/folders", get(routes::get_mailbox_folders))
+        .route("/mailbox/messages", get(routes::get_mailbox_messages))
+        .route("/mailbox/message", get(routes::get_mailbox_message))
+        .route("/mailbox/attachment", get(routes::get_mailbox_attachment))
+        .route("/mailbox/raw", get(routes::get_mailbox_raw))
+        .route("/mailbox/forward", post(routes::forward_mailbox_message))
+        .route("/mailbox/mark-read", post(routes::mark_mailbox_message_read))
         .with_state(state);
 
     Router::new()

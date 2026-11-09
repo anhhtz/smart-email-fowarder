@@ -314,12 +314,26 @@ impl Forwarder {
             "plain" => AsyncSmtpTransport::<Tokio1Executor>::builder_dangerous(&cfg.host)
                 .port(cfg.port)
                 .tls(Tls::None),
-            "starttls" => AsyncSmtpTransport::<Tokio1Executor>::starttls_relay(&cfg.host)
-                .map_err(|e| format!("STARTTLS setup error: {}", e))?
-                .port(cfg.port),
-            "ssl" => AsyncSmtpTransport::<Tokio1Executor>::relay(&cfg.host)
-                .map_err(|e| format!("SSL setup error: {}", e))?
-                .port(cfg.port),
+            "starttls" => {
+                if cfg.allow_self_signed {
+                    AsyncSmtpTransport::<Tokio1Executor>::builder_dangerous(&cfg.host)
+                        .port(cfg.port)
+                } else {
+                    AsyncSmtpTransport::<Tokio1Executor>::starttls_relay(&cfg.host)
+                        .map_err(|e| format!("STARTTLS setup error: {}", e))?
+                        .port(cfg.port)
+                }
+            }
+            "ssl" => {
+                if cfg.allow_self_signed {
+                    AsyncSmtpTransport::<Tokio1Executor>::builder_dangerous(&cfg.host)
+                        .port(cfg.port)
+                } else {
+                    AsyncSmtpTransport::<Tokio1Executor>::relay(&cfg.host)
+                        .map_err(|e| format!("SSL setup error: {}", e))?
+                        .port(cfg.port)
+                }
+            }
             _ => AsyncSmtpTransport::<Tokio1Executor>::builder_dangerous(&cfg.host)
                 .port(cfg.port)
                 .tls(Tls::None),

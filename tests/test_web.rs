@@ -25,11 +25,18 @@ async fn test_serve_embedded_frontend() {
     let html = String::from_utf8_lossy(&body_bytes);
     assert!(html.contains("<!DOCTYPE html>"));
     assert!(html.contains("Smart Email Forwarder"));
+    assert!(html.contains("Email Browser"));
+    assert!(html.contains("data-tab=\"mailbox\""));
+    assert!(html.contains("tab-mailbox"));
+    assert!(html.contains("mailboxFolderSelect"));
+    assert!(html.contains("mailboxReaderView"));
     assert!(html.contains("Process Monitor"));
     assert!(html.contains("tab-process"));
     assert!(html.contains("procMemRss"));
-    assert!(html.contains("smtpUseExchangeCredentials"));
-    assert!(html.contains("Use same credentials as Exchange Mailbox"));
+    assert!(html.contains("tab-exchange"));
+    assert!(html.contains("tab-forwarding"));
+    assert!(!html.contains("data-tab=\"smtp\""));
+    assert!(!html.contains("id=\"tab-smtp\""));
 
     // 2. Embedded CSS
     let req_css = Request::builder().uri("/static/css/style.css").body(Body::empty()).unwrap();
@@ -39,7 +46,8 @@ async fn test_serve_embedded_frontend() {
     let css_bytes = res_css.into_body().collect().await.unwrap().to_bytes();
     let css = String::from_utf8_lossy(&css_bytes);
     assert!(css.contains("process-hero-card"));
-    assert!(css.contains("credentials-badge-info"));
+    assert!(css.contains("mailbox-toolbar"));
+    assert!(css.contains("email-reader-card"));
 
     // 3. Embedded JS
     let req_js = Request::builder().uri("/static/js/app.js").body(Body::empty()).unwrap();
@@ -50,8 +58,9 @@ async fn test_serve_embedded_frontend() {
     let js = String::from_utf8_lossy(&js_bytes);
     assert!(js.contains("loadProcessMetrics"));
     assert!(js.contains("runHealthCheck"));
-    assert!(js.contains("updateSmtpAuthUI"));
-    assert!(js.contains("smtpUseExchangeCredentials"));
+    assert!(js.contains("sendTestEmail"));
+    assert!(js.contains("loadMailboxMessages"));
+    assert!(js.contains("openMailboxMessage"));
 }
 
 #[tokio::test]
@@ -195,3 +204,95 @@ async fn test_api_test_smtp_with_exchange_credentials() {
     let msg = val["message"].as_str().unwrap();
     assert!(msg.contains("Exchange mailbox credentials"));
 }
+
+#[tokio::test]
+async fn test_api_test_smtp_default_exchange_mailbox() {
+    let app = create_test_app();
+
+    // 1. First save Exchange mailbox settings
+    let ex_payload = serde_json::json!({
+        "host": "127.0.0.1",
+        "port": 993,
+        "security": "ssl",
+        "username": "user@company.local",
+        "password": "Password123!",
+        "folder": "INBOX",
+        "mark_as_read": true,
+        "allow_self_signed": true,
+        "smtp_port": 2525,
+        "smtp_security": "plain",
+        "from_email": "user@company.local",
+        "from_name": "Test User"
+    });
+    let req_save_ex = Request::builder()
+        .method("POST")
+        .uri("/api/config/exchange")
+        .header("content-type", "application/json")
+        .body(Body::from(serde_json::to_vec(&ex_payload).unwrap()))
+        .unwrap();
+    let res_save_ex = app.clone().oneshot(req_save_ex).await.unwrap();
+    assert_eq!(res_save_ex.status(), StatusCode::OK);
+
+    // 2. Call /api/test/smtp with empty body {} - it should use the Exchange mailbox by default
+    let req_test = Request::builder()
+        .method("POST")
+        .uri("/api/test/smtp")
+        .header("content-type", "application/json")
+        .body(Body::from(b"{}" as &[u8]))
+        .unwrap();
+    let res_test = app.clone().oneshot(req_test).await.unwrap();
+    // Since 127.0.0.1:2525 is not running a real SMTP server in this test, it will return BAD_REQUEST
+    // but the error message will be a connection error, NOT missing exchange config!
+    assert_eq!(res_test.status(), StatusCode::BAD_REQUEST);
+    let bytes = res_test.into_body().collect().await.unwrap().to_bytes();
+    let val: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
+    let msg = val["message"].as_str().unwrap();
+    // It attempted connection using the Exchange config host/port!
+    assert!(!msg.contains("Exchange Mailbox is not configured"));
+}
+
+#[tokio::test]
+async fn test_api_mailbox_unconfigured() {
+    let app = create_test_app();
+
+    // 1. GET /api/mailbox/folders without config
+    let req_folders = Request::builder().uri("/api/mailbox/folders").body(Body::empty()).unwrap();
+    let res_folders = app.clone().oneshot(req_folders).await.unwrap();
+    assert_eq!(res_folders.status(), StatusCode::BAD_REQUEST);
+    let bytes = res_folders.into_body().collect().await.unwrap().to_bytes();
+    let val: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
+    assert!(val["message"].as_str().unwrap().contains("Exchange Mailbox is not configured"));
+
+    // 2. GET /api/mailbox/messages without config
+    let req_msgs = Request::builder().uri("/api/mailbox/messages").body(Body::empty()).unwrap();
+    let res_msgs = app.clone().oneshot(req_msgs).await.unwrap();
+    assert_eq!(res_msgs.status(), StatusCode::BAD_REQUEST);
+
+    // 3. GET /api/mailbox/message without config
+    let req_msg = Request::builder().uri("/api/mailbox/message?uid=123").body(Body::empty()).unwrap();
+    let res_msg = app.clone().oneshot(req_msg).await.unwrap();
+    assert_eq!(res_msg.status(), StatusCode::BAD_REQUEST);
+
+    // 4. POST /api/mailbox/forward without config
+    let fwd_payload = serde_json::json!({ "uid": 123 });
+    let req_fwd = Request::builder()
+        .method("POST")
+        .uri("/api/mailbox/forward")
+        .header("content-type", "application/json")
+        .body(Body::from(serde_json::to_vec(&fwd_payload).unwrap()))
+        .unwrap();
+    let res_fwd = app.clone().oneshot(req_fwd).await.unwrap();
+    assert_eq!(res_fwd.status(), StatusCode::BAD_REQUEST);
+
+    // 5. POST /api/mailbox/mark-read without config
+    let read_payload = serde_json::json!({ "uid": 123, "seen": true });
+    let req_read = Request::builder()
+        .method("POST")
+        .uri("/api/mailbox/mark-read")
+        .header("content-type", "application/json")
+        .body(Body::from(serde_json::to_vec(&read_payload).unwrap()))
+        .unwrap();
+    let res_read = app.clone().oneshot(req_read).await.unwrap();
+    assert_eq!(res_read.status(), StatusCode::BAD_REQUEST);
+}
+
