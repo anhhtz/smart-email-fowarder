@@ -52,6 +52,8 @@ pub struct SmtpConfig {
     pub from_name: String,
     #[serde(default = "default_false")]
     pub auth_required: bool,
+    #[serde(default = "default_false")]
+    pub use_exchange_credentials: bool,
     #[serde(default)]
     pub username: String,
     pub password: Option<String>,
@@ -59,6 +61,23 @@ pub struct SmtpConfig {
 
 fn default_from_name() -> String {
     "Exchange Email Forwarder".to_string()
+}
+
+impl SmtpConfig {
+    pub fn resolve_with_exchange(&self, exchange: Option<&ExchangeConfig>) -> SmtpConfig {
+        let mut resolved = self.clone();
+        if resolved.use_exchange_credentials {
+            resolved.auth_required = true;
+            if let Some(ex) = exchange {
+                resolved.username = ex.username.clone();
+                resolved.password = ex.password.clone();
+            } else {
+                resolved.username = String::new();
+                resolved.password = None;
+            }
+        }
+        resolved
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]

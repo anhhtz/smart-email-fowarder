@@ -613,14 +613,31 @@
             </div>
 
             <div id="smtpAuthFields" class="form-row col-12 hidden">
-              <div class="form-group col-6">
-                <label for="smtpUsername">SMTP Username</label>
-                <input type="text" id="smtpUsername" name="username" placeholder="user@company.com">
+              <div class="form-group col-12 flex-center-vert" style="margin-top: 4px; margin-bottom: 8px;">
+                <label class="toggle-control">
+                  <input type="checkbox" id="smtpUseExchangeCredentials" name="use_exchange_credentials">
+                  <span class="toggle-slider"></span>
+                  <span class="toggle-label">Use same credentials as Exchange Mailbox</span>
+                </label>
               </div>
-              <div class="form-group col-6">
-                <label for="smtpPassword">SMTP Password</label>
-                <input type="password" id="smtpPassword" name="password" placeholder="••••••••">
-                <small>Leave blank to keep existing stored password.</small>
+
+              <div id="smtpExchangeCredentialsInfo" class="form-group col-12 hidden">
+                <div class="credentials-badge-info">
+                  <span class="info-icon">&#10003;</span>
+                  <span>Authenticating with Exchange Mailbox account: <strong id="exchangeAccountDisplay">None</strong></span>
+                </div>
+              </div>
+
+              <div id="smtpCustomCredentials" class="form-row col-12">
+                <div class="form-group col-6">
+                  <label for="smtpUsername">SMTP Username</label>
+                  <input type="text" id="smtpUsername" name="username" placeholder="user@company.com">
+                </div>
+                <div class="form-group col-6">
+                  <label for="smtpPassword">SMTP Password</label>
+                  <input type="password" id="smtpPassword" name="password" placeholder="••••••••">
+                  <small>Leave blank to keep existing stored password.</small>
+                </div>
               </div>
             </div>
 

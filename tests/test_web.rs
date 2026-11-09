@@ -28,6 +28,8 @@ async fn test_serve_embedded_frontend() {
     assert!(html.contains("Process Monitor"));
     assert!(html.contains("tab-process"));
     assert!(html.contains("procMemRss"));
+    assert!(html.contains("smtpUseExchangeCredentials"));
+    assert!(html.contains("Use same credentials as Exchange Mailbox"));
 
     // 2. Embedded CSS
     let req_css = Request::builder().uri("/static/css/style.css").body(Body::empty()).unwrap();
@@ -37,6 +39,7 @@ async fn test_serve_embedded_frontend() {
     let css_bytes = res_css.into_body().collect().await.unwrap().to_bytes();
     let css = String::from_utf8_lossy(&css_bytes);
     assert!(css.contains("process-hero-card"));
+    assert!(css.contains("credentials-badge-info"));
 
     // 3. Embedded JS
     let req_js = Request::builder().uri("/static/js/app.js").body(Body::empty()).unwrap();
@@ -47,6 +50,8 @@ async fn test_serve_embedded_frontend() {
     let js = String::from_utf8_lossy(&js_bytes);
     assert!(js.contains("loadProcessMetrics"));
     assert!(js.contains("runHealthCheck"));
+    assert!(js.contains("updateSmtpAuthUI"));
+    assert!(js.contains("smtpUseExchangeCredentials"));
 }
 
 #[tokio::test]
@@ -65,6 +70,35 @@ async fn test_api_status_and_config() {
     let req_cfg = Request::builder().uri("/api/config").body(Body::empty()).unwrap();
     let res_cfg = app.clone().oneshot(req_cfg).await.unwrap();
     assert_eq!(res_cfg.status(), StatusCode::OK);
+
+    // 3. POST /api/config/smtp with use_exchange_credentials
+    let smtp_payload = serde_json::json!({
+        "host": "mail.company.local",
+        "port": 25,
+        "security": "plain",
+        "from_email": "forwarder@company.com",
+        "from_name": "Relay",
+        "auth_required": false,
+        "use_exchange_credentials": true,
+        "username": "",
+        "password": null
+    });
+    let req_save_smtp = Request::builder()
+        .method("POST")
+        .uri("/api/config/smtp")
+        .header("content-type", "application/json")
+        .body(Body::from(serde_json::to_vec(&smtp_payload).unwrap()))
+        .unwrap();
+    let res_save_smtp = app.clone().oneshot(req_save_smtp).await.unwrap();
+    assert_eq!(res_save_smtp.status(), StatusCode::OK);
+
+    // Verify GET /api/config has use_exchange_credentials and auth_required = true
+    let req_cfg2 = Request::builder().uri("/api/config").body(Body::empty()).unwrap();
+    let res_cfg2 = app.clone().oneshot(req_cfg2).await.unwrap();
+    let bytes2 = res_cfg2.into_body().collect().await.unwrap().to_bytes();
+    let val2: serde_json::Value = serde_json::from_slice(&bytes2).unwrap();
+    assert_eq!(val2["smtp"]["use_exchange_credentials"], true);
+    assert_eq!(val2["smtp"]["auth_required"], true);
 }
 
 #[tokio::test]
@@ -129,4 +163,35 @@ async fn test_api_process_and_health() {
     let val_health: serde_json::Value = serde_json::from_slice(&bytes_health).unwrap();
     assert!(val_health["overall_status"].as_str().is_some());
     assert!(val_health["checks"].as_array().unwrap().len() >= 4);
+}
+
+#[tokio::test]
+async fn test_api_test_smtp_with_exchange_credentials() {
+    let app = create_test_app();
+
+    // Testing SMTP with use_exchange_credentials when Exchange config is not yet set
+    // should fail gracefully with a descriptive error message
+    let test_payload = serde_json::json!({
+        "host": "127.0.0.1",
+        "port": 25,
+        "security": "plain",
+        "from_email": "test@company.local",
+        "from_name": "Test",
+        "auth_required": true,
+        "use_exchange_credentials": true,
+        "username": "",
+        "password": null
+    });
+    let req = Request::builder()
+        .method("POST")
+        .uri("/api/test/smtp")
+        .header("content-type", "application/json")
+        .body(Body::from(serde_json::to_vec(&test_payload).unwrap()))
+        .unwrap();
+    let res = app.clone().oneshot(req).await.unwrap();
+    assert_eq!(res.status(), StatusCode::BAD_REQUEST);
+    let bytes = res.into_body().collect().await.unwrap().to_bytes();
+    let val: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
+    let msg = val["message"].as_str().unwrap();
+    assert!(msg.contains("Exchange mailbox credentials"));
 }

@@ -45,6 +45,10 @@
   const btnTestSmtp = document.getElementById("btnTestSmtp");
   const smtpAuthRequired = document.getElementById("smtpAuthRequired");
   const smtpAuthFields = document.getElementById("smtpAuthFields");
+  const smtpUseExchangeCredentials = document.getElementById("smtpUseExchangeCredentials");
+  const smtpExchangeCredentialsInfo = document.getElementById("smtpExchangeCredentialsInfo");
+  const exchangeAccountDisplay = document.getElementById("exchangeAccountDisplay");
+  const smtpCustomCredentials = document.getElementById("smtpCustomCredentials");
 
   // Process Monitor Elements
   const procBadgeStatus = document.getElementById("procBadgeStatus");
@@ -184,10 +188,42 @@
     item.addEventListener("click", () => switchTab(item.dataset.tab));
   });
 
-  // Toggle SMTP Auth Fields
-  smtpAuthRequired.addEventListener("change", () => {
-    smtpAuthFields.classList.toggle("hidden", !smtpAuthRequired.checked);
-  });
+  // Toggle SMTP Auth Fields and Exchange Credentials
+  function updateSmtpAuthUI() {
+    const isAuth = smtpAuthRequired.checked;
+    smtpAuthFields.classList.toggle("hidden", !isAuth);
+
+    if (!isAuth) {
+      return;
+    }
+
+    const useExCreds = smtpUseExchangeCredentials.checked;
+    smtpCustomCredentials.classList.toggle("hidden", useExCreds);
+    smtpExchangeCredentialsInfo.classList.toggle("hidden", !useExCreds);
+
+    if (useExCreds) {
+      const exUser = (document.getElementById("exchangeUsername").value || "").trim();
+      const badge = smtpExchangeCredentialsInfo.querySelector(".credentials-badge-info");
+      if (exUser) {
+        exchangeAccountDisplay.textContent = exUser;
+        if (badge) badge.className = "credentials-badge-info";
+        const fromEmailInput = document.getElementById("smtpFromEmail");
+        if (fromEmailInput && !fromEmailInput.value.trim() && exUser.includes("@")) {
+          fromEmailInput.value = exUser;
+        }
+      } else {
+        exchangeAccountDisplay.textContent = "None configured (please configure in Exchange Mailbox tab)";
+        if (badge) badge.className = "credentials-badge-info warning";
+      }
+    }
+  }
+
+  smtpAuthRequired.addEventListener("change", updateSmtpAuthUI);
+  smtpUseExchangeCredentials.addEventListener("change", updateSmtpAuthUI);
+  const exUsernameEl = document.getElementById("exchangeUsername");
+  if (exUsernameEl) {
+    exUsernameEl.addEventListener("input", updateSmtpAuthUI);
+  }
 
   // Modal handlers
   function showModal(title, html) {
@@ -312,10 +348,11 @@
         document.getElementById("smtpFromName").value =
           config.smtp.from_name || "Exchange Email Forwarder";
         smtpAuthRequired.checked = !!config.smtp.auth_required;
-        smtpAuthFields.classList.toggle("hidden", !config.smtp.auth_required);
+        smtpUseExchangeCredentials.checked = !!config.smtp.use_exchange_credentials;
         document.getElementById("smtpUsername").value =
           config.smtp.username || "";
         document.getElementById("smtpPassword").value = "";
+        updateSmtpAuthUI();
       }
     } catch (e) {
       showAlert(`Failed to load configuration: ${e.message}`, "error");
@@ -489,6 +526,7 @@
       from_email: document.getElementById("smtpFromEmail").value.trim(),
       from_name: document.getElementById("smtpFromName").value.trim(),
       auth_required: smtpAuthRequired.checked,
+      use_exchange_credentials: smtpUseExchangeCredentials.checked,
       username: document.getElementById("smtpUsername").value.trim(),
       password: document.getElementById("smtpPassword").value,
     };
@@ -514,6 +552,7 @@
         from_email: document.getElementById("smtpFromEmail").value.trim(),
         from_name: document.getElementById("smtpFromName").value.trim(),
         auth_required: smtpAuthRequired.checked,
+        use_exchange_credentials: smtpUseExchangeCredentials.checked,
         username: document.getElementById("smtpUsername").value.trim(),
         password: document.getElementById("smtpPassword").value,
       };
@@ -697,8 +736,10 @@
         subSmtpDot.className = "status-dot active";
         subSmtpBadge.textContent = "Configured";
         subSmtpBadge.className = "badge badge-success";
-        subSmtpHost.textContent = `${cfg.smtp.host}:${cfg.smtp.port}`;
-        subSmtpPortSec.textContent = `${cfg.smtp.port} (${cfg.smtp.security || "plain"})`;
+        const authMode = cfg.smtp.use_exchange_credentials
+          ? "Exchange Mailbox Auth"
+          : (cfg.smtp.auth_required ? "Custom Auth" : "No Auth");
+        subSmtpPortSec.textContent = `${cfg.smtp.port} (${cfg.smtp.security || "plain"}, ${authMode})`;
         subSmtpSender.textContent = cfg.smtp.from_email;
       } else {
         subSmtpDot.className = "status-dot paused";

@@ -331,6 +331,9 @@ impl Forwarder {
             let user = cfg.username.trim();
             let pass = cfg.password.as_deref().unwrap_or("").trim();
             if user.is_empty() || pass.is_empty() {
+                if cfg.use_exchange_credentials {
+                    return Err("Authentication is configured to use Exchange mailbox credentials, but Exchange username or password is missing. Please configure Exchange Mailbox settings first.".to_string());
+                }
                 return Err("Authentication is enabled but username or password is empty".to_string());
             }
             transport_builder = transport_builder.credentials(Credentials::new(

@@ -241,7 +241,8 @@ impl PollerManager {
                 continue;
             }
 
-            let result = Forwarder::forward_email(&email.raw_bytes, &forward_cfg, &smtp_cfg).await;
+            let effective_smtp_cfg = smtp_cfg.resolve_with_exchange(Some(&exchange_cfg));
+            let result = Forwarder::forward_email(&email.raw_bytes, &forward_cfg, &effective_smtp_cfg).await;
 
             if result.success {
                 forwarded_count += 1;

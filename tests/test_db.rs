@@ -78,6 +78,7 @@ fn test_config_save_and_password_preservation() {
         from_email: "forwarder@company.com".to_string(),
         from_name: "Relay Service".to_string(),
         auth_required: false,
+        use_exchange_credentials: false,
         username: String::new(),
         password: None,
     };
@@ -87,6 +88,48 @@ fn test_config_save_and_password_preservation() {
     assert_eq!(loaded_smtp.host, "mail.company.local");
     assert_eq!(loaded_smtp.port, 25);
     assert!(!loaded_smtp.auth_required);
+    assert!(!loaded_smtp.use_exchange_credentials);
+}
+
+#[test]
+fn test_smtp_use_exchange_credentials() {
+    let db = Database::new_in_memory().unwrap();
+
+    let mut ex_cfg = ExchangeConfig {
+        host: "mail.company.local".to_string(),
+        port: 993,
+        security: "ssl".to_string(),
+        username: "CORP\\jdoe".to_string(),
+        password: Some("ExchangeSecret123!".to_string()),
+        folder: "INBOX".to_string(),
+        mark_as_read: true,
+        allow_self_signed: false,
+    };
+    db.save_exchange_config(&mut ex_cfg).unwrap();
+
+    let mut smtp_cfg = SmtpConfig {
+        host: "mail.company.local".to_string(),
+        port: 25,
+        security: "plain".to_string(),
+        from_email: "jdoe@company.com".to_string(),
+        from_name: "John Doe".to_string(),
+        auth_required: true,
+        use_exchange_credentials: true,
+        username: String::new(),
+        password: None,
+    };
+    db.save_smtp_config(&mut smtp_cfg).unwrap();
+
+    let loaded_cfg = db.get_config().unwrap();
+    let loaded_smtp = loaded_cfg.smtp.unwrap();
+    assert!(loaded_smtp.use_exchange_credentials);
+    assert!(loaded_smtp.auth_required);
+
+    // Test resolve_with_exchange
+    let resolved = loaded_smtp.resolve_with_exchange(loaded_cfg.exchange.as_ref());
+    assert!(resolved.auth_required);
+    assert_eq!(resolved.username, "CORP\\jdoe");
+    assert_eq!(resolved.password.as_deref(), Some("ExchangeSecret123!"));
 }
 
 #[test]

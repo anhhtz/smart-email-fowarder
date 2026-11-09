@@ -854,6 +854,37 @@ body {
   animation: spin 1s linear infinite;
 }
 
+/* Credentials Badge Note */
+.form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  width: 100%;
+}
+
+.credentials-badge-info {
+  background-color: var(--success-bg, #f0fdf4);
+  border: 1px solid #bbf7d0;
+  color: var(--success, #16a34a);
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.credentials-badge-info.warning {
+  background-color: var(--warning-bg, #fffbeb);
+  border-color: #fef08a;
+  color: var(--warning, #b45309);
+}
+
+.credentials-badge-info .info-icon {
+  font-size: 15px;
+  font-weight: bold;
+}
+
 /* Responsive */
 @media (max-width: 860px) {
   .app-container { flex-direction: column; }

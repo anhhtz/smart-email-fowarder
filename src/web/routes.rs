@@ -111,6 +111,9 @@ pub async fn save_smtp_config(
     if payload.password.as_deref() == Some("••••••••") {
         payload.password = None;
     }
+    if payload.use_exchange_credentials {
+        payload.auth_required = true;
+    }
 
     state
         .db
@@ -157,24 +160,27 @@ pub async fn test_smtp(
     State(state): State<AppState>,
     Json(mut payload): Json<SmtpConfig>,
 ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
-    if payload.password.as_deref().unwrap_or("").trim().is_empty()
-        || payload.password.as_deref() == Some("••••••••")
-    {
-        if let Ok(cfg) = state.db.get_config() {
-            if let Some(existing) = cfg.smtp {
-                payload.password = existing.password;
+    let cfg = state.db.get_config().unwrap_or_default();
+
+    if !payload.use_exchange_credentials {
+        if payload.password.as_deref().unwrap_or("").trim().is_empty()
+            || payload.password.as_deref() == Some("••••••••")
+        {
+            if let Some(existing) = cfg.smtp.as_ref() {
+                payload.password = existing.password.clone();
             }
         }
     }
 
+    let effective_smtp = payload.resolve_with_exchange(cfg.exchange.as_ref());
+
     // Retrieve configured target Gmail address
-    let cfg = state.db.get_config().unwrap_or_default();
     let target_emails = cfg
         .forwarding
         .map(|f| f.target_emails)
         .unwrap_or_else(|| vec!["admin@example.com".to_string()]);
 
-    match Forwarder::send_test_email(&payload, &target_emails).await {
+    match Forwarder::send_test_email(&effective_smtp, &target_emails).await {
         Ok(recipient) => {
             let _ = state.db.log_event(
                 "SUCCESS",

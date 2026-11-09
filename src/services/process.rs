@@ -283,7 +283,13 @@ pub async fn collect_health_report(
 
     // 5. Outbound Exchange SMTP Relay Configuration
     if let Some(ref sm) = cfg.smtp {
-        let auth_desc = if sm.auth_required { "Auth: Yes" } else { "Auth: No" };
+        let auth_desc = if sm.use_exchange_credentials {
+            "Auth: Exchange Mailbox Credentials"
+        } else if sm.auth_required {
+            "Auth: Custom SMTP Credentials"
+        } else {
+            "Auth: No"
+        };
         checks.push(SubsystemHealthCheck {
             name: "Outbound SMTP Relay".to_string(),
             status: "UP".to_string(),

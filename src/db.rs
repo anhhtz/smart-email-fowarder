@@ -236,8 +236,8 @@ impl Database {
     pub fn save_smtp_config(&self, new_cfg: &mut SmtpConfig) -> Result<()> {
         let existing = self.get_config()?.smtp;
 
-        // Preserve existing password if user left it blank in UI
-        if new_cfg.password.as_deref().unwrap_or("").trim().is_empty() {
+        // Preserve existing password if user left it blank in UI (and not using exchange credentials)
+        if !new_cfg.use_exchange_credentials && new_cfg.password.as_deref().unwrap_or("").trim().is_empty() {
             if let Some(old) = existing {
                 new_cfg.password = old.password;
             }
