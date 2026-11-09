@@ -1,6 +1,6 @@
 use crate::models::{
-    AppConfig, DatabaseMetrics, ExchangeConfig, ForwardLog, ForwardingConfig, SmtpConfig,
-    SystemLogEntry,
+    AppConfig, DatabaseMetrics, ExchangeConfig, ForwardLog, ForwardingConfig, GoogleOAuthConfig,
+    SmtpConfig, SystemLogEntry, UserSession,
 };
 use chrono::Utc;
 use rusqlite::{params, Connection, Result};
@@ -12,6 +12,14 @@ use tracing::info;
 pub struct Database {
     conn: Arc<Mutex<Connection>>,
     path: Option<PathBuf>,
+}
+
+fn generate_session_token() -> String {
+    let mut bytes = [0u8; 32];
+    for b in bytes.iter_mut() {
+        *b = fastrand::u8(..);
+    }
+    bytes.iter().map(|b| format!("{:02x}", b)).collect()
 }
 
 impl Database {
@@ -156,6 +164,23 @@ impl Database {
                 level TEXT NOT NULL,
                 message TEXT NOT NULL
             );",
+            [],
+        )?;
+
+        // Auth Sessions Table
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS auth_sessions (
+                token TEXT PRIMARY KEY,
+                username TEXT NOT NULL,
+                provider TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                expires_at TEXT NOT NULL
+            );",
+            [],
+        )?;
+
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_sessions_expires ON auth_sessions (expires_at);",
             [],
         )?;
 
@@ -378,5 +403,124 @@ impl Database {
         }
         list.reverse();
         Ok(list)
+    }
+
+    // Authentication & Session Methods
+    pub fn create_auth_session(
+        &self,
+        username: &str,
+        provider: &str,
+        duration_hours: i64,
+    ) -> Result<UserSession> {
+        let token = generate_session_token();
+        let now = Utc::now();
+        let expires = now + chrono::Duration::hours(duration_hours);
+
+        let session = UserSession {
+            token: token.clone(),
+            username: username.to_string(),
+            provider: provider.to_string(),
+            created_at: now.to_rfc3339(),
+            expires_at: expires.to_rfc3339(),
+        };
+
+        let conn = self.conn.lock().unwrap();
+        conn.execute(
+            "INSERT INTO auth_sessions (token, username, provider, created_at, expires_at)
+             VALUES (?1, ?2, ?3, ?4, ?5);",
+            params![
+                session.token,
+                session.username,
+                session.provider,
+                session.created_at,
+                session.expires_at,
+            ],
+        )?;
+
+        Ok(session)
+    }
+
+    pub fn validate_auth_session(&self, token: &str) -> Result<Option<UserSession>> {
+        let conn = self.conn.lock().unwrap();
+        let mut stmt = conn.prepare(
+            "SELECT token, username, provider, created_at, expires_at FROM auth_sessions WHERE token = ?1;",
+        )?;
+
+        let mut rows = stmt.query(params![token])?;
+        if let Some(row) = rows.next()? {
+            let token: String = row.get(0)?;
+            let username: String = row.get(1)?;
+            let provider: String = row.get(2)?;
+            let created_at: String = row.get(3)?;
+            let expires_at_str: String = row.get(4)?;
+
+            if let Ok(expires_at) = chrono::DateTime::parse_from_rfc3339(&expires_at_str) {
+                if expires_at.with_timezone(&Utc) < Utc::now() {
+                    drop(rows);
+                    drop(stmt);
+                    let _ = conn.execute("DELETE FROM auth_sessions WHERE token = ?1;", params![token]);
+                    return Ok(None);
+                }
+            }
+
+            Ok(Some(UserSession {
+                token,
+                username,
+                provider,
+                created_at,
+                expires_at: expires_at_str,
+            }))
+        } else {
+            Ok(None)
+        }
+    }
+
+    pub fn delete_auth_session(&self, token: &str) -> Result<()> {
+        let conn = self.conn.lock().unwrap();
+        conn.execute("DELETE FROM auth_sessions WHERE token = ?1;", params![token])?;
+        Ok(())
+    }
+
+    pub fn cleanup_expired_sessions(&self) -> Result<usize> {
+        let now = Utc::now().to_rfc3339();
+        let conn = self.conn.lock().unwrap();
+        let count = conn.execute("DELETE FROM auth_sessions WHERE expires_at < ?1;", params![now])?;
+        Ok(count)
+    }
+
+    pub fn get_active_session_count(&self) -> Result<usize> {
+        let now = Utc::now().to_rfc3339();
+        let conn = self.conn.lock().unwrap();
+        let count: i64 = conn.query_row(
+            "SELECT COUNT(*) FROM auth_sessions WHERE expires_at >= ?1;",
+            params![now],
+            |r| r.get(0),
+        )?;
+        Ok(count as usize)
+    }
+
+    // Google OAuth2 Config Slot Methods (Stage 2)
+    pub fn get_google_oauth_config(&self) -> Result<GoogleOAuthConfig> {
+        let conn = self.conn.lock().unwrap();
+        let mut stmt = conn.prepare("SELECT value FROM settings WHERE key = 'google_oauth';")?;
+        let mut rows = stmt.query([])?;
+        if let Some(row) = rows.next()? {
+            let val: String = row.get(0)?;
+            if let Ok(cfg) = serde_json::from_str::<GoogleOAuthConfig>(&val) {
+                return Ok(cfg);
+            }
+        }
+        Ok(GoogleOAuthConfig::default())
+    }
+
+    pub fn save_google_oauth_config(&self, cfg: &GoogleOAuthConfig) -> Result<()> {
+        let json = serde_json::to_string(cfg).unwrap_or_default();
+        let conn = self.conn.lock().unwrap();
+        conn.execute(
+            "INSERT INTO settings (key, value) VALUES ('google_oauth', ?1)
+             ON CONFLICT(key) DO UPDATE SET value = ?1;",
+            params![json],
+        )?;
+        Ok(())
     }
 }

@@ -49,6 +49,19 @@ impl ExchangeClient {
             .map_err(|_| "Connection timed out after 15 seconds".to_string())?
     }
 
+    /// Authenticate credentials against Exchange IMAP server
+    pub async fn authenticate(cfg: &ExchangeConfig) -> Result<(), String> {
+        let fut = async {
+            let mut session = Self::connect(cfg).await?;
+            let _ = session.logout().await;
+            Ok(())
+        };
+
+        timeout(Duration::from_secs(15), fut)
+            .await
+            .map_err(|_| "Exchange authentication timed out after 15 seconds".to_string())?
+    }
+
     pub async fn fetch_unseen_emails(
         cfg: &ExchangeConfig,
     ) -> Result<Vec<FetchedEmail>, String> {

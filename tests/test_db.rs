@@ -214,3 +214,54 @@ fn test_forward_logs_and_stats() {
     assert_eq!(logs[1].message_id, "msg-01");
     assert_eq!(logs[1].status, "SUCCESS");
 }
+
+#[test]
+fn test_auth_sessions_crud() {
+    let db = Database::new_in_memory().unwrap();
+
+    // 1. Create a session for 24 hours
+    let session = db.create_auth_session("user@exchange.local", "exchange", 24).unwrap();
+    assert_eq!(session.username, "user@exchange.local");
+    assert_eq!(session.provider, "exchange");
+    assert_eq!(session.token.len(), 64);
+
+    // 2. Validate session
+    let validated = db.validate_auth_session(&session.token).unwrap();
+    assert!(validated.is_some());
+    let val_user = validated.unwrap();
+    assert_eq!(val_user.username, "user@exchange.local");
+
+    // 3. Active session count
+    assert_eq!(db.get_active_session_count().unwrap(), 1);
+
+    // 4. Delete session
+    db.delete_auth_session(&session.token).unwrap();
+    assert!(db.validate_auth_session(&session.token).unwrap().is_none());
+    assert_eq!(db.get_active_session_count().unwrap(), 0);
+}
+
+#[test]
+fn test_google_oauth_config_db() {
+    let db = Database::new_in_memory().unwrap();
+
+    // Default config
+    let default_cfg = db.get_google_oauth_config().unwrap();
+    assert_eq!(default_cfg.enabled, false);
+    assert_eq!(default_cfg.redirect_uri, "http://localhost:8080/api/auth/oauth/google/callback");
+
+    // Save custom slot config
+    let custom = smart_email_forwarder::models::GoogleOAuthConfig {
+        enabled: false,
+        client_id: Some("custom-client-id".to_string()),
+        client_secret: Some("custom-secret".to_string()),
+        redirect_uri: "/api/auth/oauth/google/callback".to_string(),
+        scopes: vec!["email".to_string(), "profile".to_string()],
+        auth_url_preview: None,
+    };
+    db.save_google_oauth_config(&custom).unwrap();
+
+    let loaded = db.get_google_oauth_config().unwrap();
+    assert_eq!(loaded.client_id.as_deref(), Some("custom-client-id"));
+    assert_eq!(loaded.client_secret.as_deref(), Some("custom-secret"));
+    assert_eq!(loaded.scopes.len(), 2);
+}

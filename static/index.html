@@ -76,6 +76,18 @@
           <p id="pageSubheading">System health, forward statistics, and recent activity.</p>
         </div>
         <div class="topbar-actions">
+          <!-- User Session Badge -->
+          <div class="user-auth-badge" id="userAuthBadge" style="display: none;">
+            <div class="user-avatar" id="userAvatar">EX</div>
+            <div class="user-info">
+              <span class="user-name" id="userDisplayName">Exchange User</span>
+              <span class="auth-provider-tag" id="authProviderTag">Exchange Mailbox</span>
+            </div>
+            <button class="btn btn-sm btn-outline" id="btnSignOut" style="padding: 4px 8px; font-size: 11px; margin-left: 4px;" title="Sign Out">
+              <span>&#x21AA;</span> Exit
+            </button>
+          </div>
+
           <button class="btn btn-secondary" id="btnTogglePoller">
             <span class="icon">&#10074;&#10074;</span> <span id="togglePollerLabel">Pause Poller</span>
           </button>
@@ -732,6 +744,49 @@
             </div>
           </form>
         </div>
+
+        <!-- Google OAuth2 Single Sign-On Configuration Card -->
+        <div class="content-card" style="margin-top: 24px;">
+          <div class="card-header flex-between">
+            <div>
+              <h3>Google OAuth2 Single Sign-On Configuration</h3>
+              <p class="card-desc">
+                Google Workspace &amp; Gmail OAuth 2.0 Web Application credentials configured via <code>.env</code>.
+              </p>
+            </div>
+            <span class="badge badge-warning" id="googleSettingsStatus">Awaiting .env Configuration</span>
+          </div>
+
+          <form id="formGoogleOAuthSlot" class="form-grid">
+            <div class="form-group col-6">
+              <label for="googleClientId">Google OAuth2 Client ID</label>
+              <input type="text" id="googleClientId" name="client_id" placeholder="e.g. 123456789-xyz.apps.googleusercontent.com">
+              <small>Google Cloud Console OAuth 2.0 Web Application Client ID.</small>
+            </div>
+            <div class="form-group col-6">
+              <label for="googleClientSecret">Google OAuth2 Client Secret</label>
+              <input type="password" id="googleClientSecret" name="client_secret" placeholder="••••••••">
+              <small>Client secret for backend token exchange.</small>
+            </div>
+            <div class="form-group col-6">
+              <label for="googleRedirectUri">OAuth2 Redirect URI Callback</label>
+              <input type="text" id="googleRedirectUri" name="redirect_uri" value="http://localhost:8080/api/auth/oauth/google/callback" readonly>
+              <small>Must match Authorized Redirect URIs in Google Cloud Console.</small>
+            </div>
+            <div class="form-group col-6">
+              <label for="googleScopes">Requested Scopes</label>
+              <input type="text" id="googleScopes" name="scopes" value="openid, email, profile" readonly>
+              <small>Standard permissions for Google Single Sign-On (Non-sensitive).</small>
+            </div>
+
+            <div class="form-actions col-12 flex-between">
+              <button type="button" class="btn btn-outline" id="btnTestGoogleSlot">
+                <span>&#128269;</span> Test Google OAuth2 Endpoint
+              </button>
+              <button type="submit" class="btn btn-secondary">Save OAuth2 Configuration</button>
+            </div>
+          </form>
+        </div>
       </section>
 
       <!-- Tab Content: Forwarding Rules -->
@@ -804,6 +859,160 @@
         </div>
       </section>
     </main>
+  </div>
+
+  <!-- Authentication Overlay (Default: Google OAuth2, Fallback: Exchange) -->
+  <div id="authScreen" class="auth-overlay">
+    <div class="auth-card">
+      <div class="auth-header">
+        <div class="auth-logo">
+          <svg viewBox="0 0 24 24" width="36" height="36">
+            <path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.7 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.4 9 5 12 5z"/>
+            <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z"/>
+            <path fill="#FBBC05" d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.8s.2-2.1.4-2.8L1.9 6.3C.7 8.7 0 10.3 0 12s.7 3.3 1.9 5.7l3.7-2.9z"/>
+            <path fill="#34A853" d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2-6.4-4.8L1.9 16.4C3.7 20.1 7.5 23 12 23z"/>
+          </svg>
+        </div>
+        <h2>Smart Email Forwarder</h2>
+        <p class="auth-subtitle">Sign in to manage forwarding rules and monitor mailboxes</p>
+      </div>
+
+      <!-- Provider Selector Tabs (Google OAuth2 First & Default) -->
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tabSelectGoogle" type="button">
+          <svg viewBox="0 0 24 24" width="16" height="16">
+            <path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.7 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.4 9 5 12 5z"/>
+            <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z"/>
+            <path fill="#FBBC05" d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.8s.2-2.1.4-2.8L1.9 6.3C.7 8.7 0 10.3 0 12s.7 3.3 1.9 5.7l3.7-2.9z"/>
+            <path fill="#34A853" d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2-6.4-4.8L1.9 16.4C3.7 20.1 7.5 23 12 23z"/>
+          </svg>
+          <span>Google OAuth2</span>
+          <span class="auth-pill auth-pill-active" id="googleTabBadge">Default</span>
+        </button>
+        <button class="auth-tab" id="tabSelectExchange" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          </svg>
+          <span>Exchange Mailbox</span>
+          <span class="auth-pill auth-pill-slot">Fallback</span>
+        </button>
+      </div>
+
+      <div id="authAlert" class="alert-box hidden" style="margin: 0 0 16px 0;"></div>
+
+      <!-- Google OAuth2 Pane (Default Active) -->
+      <div id="googleOAuthPane" class="auth-form-pane">
+        <!-- Configured Active View -->
+        <div id="googleConfiguredView" class="oauth-slot-card">
+          <div class="oauth-slot-icon">
+            <svg viewBox="0 0 24 24" width="48" height="48">
+              <path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.7 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.4 9 5 12 5z"/>
+              <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z"/>
+              <path fill="#FBBC05" d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.8s.2-2.1.4-2.8L1.9 6.3C.7 8.7 0 10.3 0 12s.7 3.3 1.9 5.7l3.7-2.9z"/>
+              <path fill="#34A853" d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2-6.4-4.8L1.9 16.4C3.7 20.1 7.5 23 12 23z"/>
+            </svg>
+          </div>
+          <h3>Sign In with Google</h3>
+          <span class="badge badge-success" style="background: rgba(16, 185, 129, 0.2); color: #10b981; font-weight: 600;">Default Auth</span>
+          <p class="oauth-desc">
+            Sign in with your corporate Google Workspace or personal Gmail account via official Google OAuth 2.0.
+          </p>
+
+          <a href="/api/auth/oauth/google" class="btn btn-primary btn-block btn-lg" id="btnGoogleSignIn" style="background: #4285F4; border-color: #4285F4; display: flex; align-items: center; justify-content: center; gap: 10px; font-weight: 600; text-decoration: none; color: white; margin-top: 16px;">
+            <svg viewBox="0 0 24 24" width="20" height="20" style="vertical-align: middle;">
+              <path fill="#ffffff" d="M21.35 11.1h-9.17v2.98h5.27c-.23 1.21-.92 2.24-1.95 2.92v2.43h3.15c1.85-1.7 2.91-4.21 2.91-7.15 0-.69-.06-1.37-.21-2.18z"/>
+              <path fill="#ffffff" d="M12.18 21c2.63 0 4.84-.87 6.45-2.37l-3.15-2.43c-.87.59-1.99.93-3.3.93-2.54 0-4.69-1.72-5.46-4.03H3.45v2.51C5.07 18.79 8.38 21 12.18 21z"/>
+              <path fill="#67a4ff" d="M6.72 13.1c-.2-.59-.31-1.22-.31-1.87s.11-1.28.31-1.87V6.85H3.45C2.8 8.14 2.43 9.61 2.43 11.23s.37 3.09 1.02 4.38l3.27-2.51z"/>
+              <path fill="#ffffff" d="M12.18 5.67c1.43 0 2.72.49 3.73 1.46l2.8-2.8C17.01 2.76 14.81 1.9 12.18 1.9 8.38 1.9 5.07 4.11 3.45 7.33l3.27 2.52c.77-2.31 2.92-4.18 5.46-4.18z"/>
+            </svg>
+            <span>Sign In with Google</span>
+          </a>
+
+          <div class="oauth-actions" style="margin-top: 16px;">
+            <button type="button" class="btn btn-secondary btn-block" id="btnBackToExchangeFromActive">
+              <span>Sign in with Exchange Mailbox Instead</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Unconfigured Setup View -->
+        <div id="googleUnconfiguredView" class="oauth-slot-card hidden">
+          <div class="oauth-slot-icon">
+            <svg viewBox="0 0 24 24" width="48" height="48">
+              <path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.7 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.4 9 5 12 5z"/>
+              <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z"/>
+              <path fill="#FBBC05" d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.8s.2-2.1.4-2.8L1.9 6.3C.7 8.7 0 10.3 0 12s.7 3.3 1.9 5.7l3.7-2.9z"/>
+              <path fill="#34A853" d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2-6.4-4.8L1.9 16.4C3.7 20.1 7.5 23 12 23z"/>
+            </svg>
+          </div>
+          <h3>Google OAuth2 Authentication</h3>
+          <span class="badge badge-warning" id="badgeGoogleStatus">Awaiting .env Configuration</span>
+          <p class="oauth-desc">
+            To enable Google Sign-In, please provide your Google Cloud Console OAuth 2.0 Web Client credentials in your <code>.env</code> file.
+          </p>
+
+          <div style="background: #0f172a; padding: 12px; border-radius: 6px; text-align: left; margin: 12px 0; font-family: monospace; font-size: 11px; color: #38bdf8; border: 1px solid var(--border-color); line-height: 1.6;">
+            <div>GOOGLE_CLIENT_ID=your_google_client_id</div>
+            <div>GOOGLE_CLIENT_SECRET=your_google_client_secret</div>
+            <div>GOOGLE_REDIRECT_URI=http://localhost:8080/api/auth/oauth/google/callback</div>
+            <div>ALLOWED_EMAILS=user@company.com</div>
+          </div>
+
+          <div class="oauth-slot-specs">
+            <div class="spec-item">
+              <span class="spec-label">Authorized Redirect URI:</span>
+              <code id="oauthCallbackDisplay">http://localhost:8080/api/auth/oauth/google/callback</code>
+            </div>
+          </div>
+
+          <button type="button" class="btn btn-outline btn-block" id="btnPreviewGoogleOAuth" style="margin-top: 8px;">
+            <span>&#128269; View OAuth2 Endpoint Details</span>
+          </button>
+
+          <div class="oauth-actions" style="margin-top: 14px;">
+            <button type="button" class="btn btn-primary btn-block" id="btnBackToExchange">
+              <span>Continue with Exchange Mailbox</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Exchange Login Form (Fallback) -->
+      <div id="exchangeLoginForm" class="auth-form-pane hidden">
+        <form id="formExchangeLogin">
+          <div class="form-group" id="groupAuthExchangeHost">
+            <label for="authExchangeHost">Exchange Server Host</label>
+            <input type="text" id="authExchangeHost" class="form-control" placeholder="e.g. mail.company.com or outlook.office365.com" required>
+            <small style="color: var(--text-muted); display: block; margin-top: 4px;" id="authHostHint">Connect to Exchange IMAP (Port 993)</small>
+          </div>
+
+          <div class="form-group">
+            <label for="authExchangeUsername">Mailbox Username / Email</label>
+            <input type="text" id="authExchangeUsername" class="form-control" placeholder="user@company.com or domain\user" required autocomplete="username">
+          </div>
+
+          <div class="form-group">
+            <label for="authExchangePassword">Mailbox Password</label>
+            <input type="password" id="authExchangePassword" class="form-control" placeholder="Enter Exchange password" required autocomplete="current-password">
+          </div>
+
+          <div class="form-group" style="margin-bottom: 20px;">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; color: var(--text-muted);">
+              <input type="checkbox" id="authAllowSelfSigned">
+              <span>Accept self-signed TLS certificates (Internal Exchange servers)</span>
+            </label>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block btn-lg" id="btnSubmitExchangeLogin">
+            <span id="btnLoginText">Sign In with Exchange Mailbox</span>
+          </button>
+        </form>
+      </div>
+
+      <div class="auth-footer">
+        <span>Enterprise Grade • Encrypted Sessions • Zero Cloud Dependencies</span>
+      </div>
+    </div>
   </div>
 
   <!-- Email Details Modal -->

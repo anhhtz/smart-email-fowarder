@@ -203,11 +203,25 @@
 
   // API Call Helpers
   async function api(path, options = {}) {
+    const token = localStorage.getItem("auth_token");
+    const headers = {
+      "Content-Type": "application/json",
+      ...(options.headers || {}),
+    };
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+
     const res = await fetch(`/api${path}`, {
-      headers: { "Content-Type": "application/json" },
       ...options,
+      headers,
     });
+
     if (!res.ok) {
+      if (res.status === 401 && path !== "/auth/status" && path !== "/auth/login") {
+        localStorage.removeItem("auth_token");
+        showAuthScreen();
+      }
       const err = await res.json().catch(() => ({ message: res.statusText }));
       throw new Error(err.message || `Request failed with code ${res.status}`);
     }
@@ -1229,18 +1243,353 @@
       .replace(/"/g, "&quot;");
   }
 
-  // Initialize
-  loadConfig();
-  loadStatus();
-  loadActivity();
+  // Authentication Elements & Handlers
+  const authScreen = document.getElementById("authScreen");
+  const tabSelectExchange = document.getElementById("tabSelectExchange");
+  const tabSelectGoogle = document.getElementById("tabSelectGoogle");
+  const exchangeLoginForm = document.getElementById("exchangeLoginForm");
+  const googleOAuthPane = document.getElementById("googleOAuthPane");
+  const formExchangeLogin = document.getElementById("formExchangeLogin");
+  const authExchangeHost = document.getElementById("authExchangeHost");
+  const authExchangeUsername = document.getElementById("authExchangeUsername");
+  const authExchangePassword = document.getElementById("authExchangePassword");
+  const authAllowSelfSigned = document.getElementById("authAllowSelfSigned");
+  const authAlert = document.getElementById("authAlert");
+  const btnSubmitExchangeLogin = document.getElementById("btnSubmitExchangeLogin");
+  const btnLoginText = document.getElementById("btnLoginText");
+  const btnBackToExchange = document.getElementById("btnBackToExchange");
+  const btnBackToExchangeFromActive = document.getElementById("btnBackToExchangeFromActive");
+  const btnPreviewGoogleOAuth = document.getElementById("btnPreviewGoogleOAuth");
+  const googleConfiguredView = document.getElementById("googleConfiguredView");
+  const googleUnconfiguredView = document.getElementById("googleUnconfiguredView");
+  const googleTabBadge = document.getElementById("googleTabBadge");
+  const userAuthBadge = document.getElementById("userAuthBadge");
+  const userAvatar = document.getElementById("userAvatar");
+  const userDisplayName = document.getElementById("userDisplayName");
+  const authProviderTag = document.getElementById("authProviderTag");
+  const btnSignOut = document.getElementById("btnSignOut");
 
-  // Periodic Polling for Status and Activity
-  statusPollTimer = setInterval(() => {
-    loadStatus();
-    if (currentTab === "dashboard") {
-      loadActivity();
-    } else if (currentTab === "process" && isProcAutoRefresh) {
-      loadProcessMetrics();
+  // Google OAuth2 Slot Form
+  const formGoogleOAuthSlot = document.getElementById("formGoogleOAuthSlot");
+  const googleClientId = document.getElementById("googleClientId");
+  const googleClientSecret = document.getElementById("googleClientSecret");
+  const btnTestGoogleSlot = document.getElementById("btnTestGoogleSlot");
+
+  function showAuthScreen() {
+    if (authScreen) authScreen.classList.remove("hidden");
+    if (userAuthBadge) userAuthBadge.style.display = "none";
+    if (statusPollTimer) {
+      clearInterval(statusPollTimer);
+      statusPollTimer = null;
     }
-  }, 3000);
+  }
+
+  function hideAuthScreen() {
+    if (authScreen) authScreen.classList.add("hidden");
+    if (userAuthBadge) userAuthBadge.style.display = "flex";
+  }
+
+  function showAuthAlert(msg, type = "error") {
+    if (!authAlert) return;
+    authAlert.textContent = msg;
+    authAlert.className = `alert-box alert-${type}`;
+    authAlert.classList.remove("hidden");
+  }
+
+  function hideAuthAlert() {
+    if (authAlert) authAlert.classList.add("hidden");
+  }
+
+  function switchAuthTab(tab) {
+    if (tab === "exchange") {
+      tabSelectExchange.classList.add("active");
+      tabSelectGoogle.classList.remove("active");
+      exchangeLoginForm.classList.remove("hidden");
+      googleOAuthPane.classList.add("hidden");
+    } else {
+      tabSelectGoogle.classList.add("active");
+      tabSelectExchange.classList.remove("active");
+      googleOAuthPane.classList.remove("hidden");
+      exchangeLoginForm.classList.add("hidden");
+    }
+  }
+
+  if (tabSelectExchange) {
+    tabSelectExchange.addEventListener("click", () => switchAuthTab("exchange"));
+  }
+  if (tabSelectGoogle) {
+    tabSelectGoogle.addEventListener("click", () => switchAuthTab("google"));
+  }
+  if (btnBackToExchange) {
+    btnBackToExchange.addEventListener("click", () => switchAuthTab("exchange"));
+  }
+  if (btnBackToExchangeFromActive) {
+    btnBackToExchangeFromActive.addEventListener("click", () => switchAuthTab("exchange"));
+  }
+
+  if (btnPreviewGoogleOAuth) {
+    btnPreviewGoogleOAuth.addEventListener("click", async () => {
+      try {
+        const res = await fetch("/api/auth/oauth/google?format=json");
+        const data = await res.json();
+        if (data.is_configured) {
+          showModal(
+            "Google OAuth2 Active Status",
+            `<div style="font-size: 13px; line-height: 1.6;">
+              <p><strong>Status:</strong> <span class="badge badge-success" style="background: rgba(16, 185, 129, 0.2); color: #10b981;">Active & Ready</span></p>
+              <p><strong>Provider:</strong> Google Workspace / Gmail OAuth 2.0</p>
+              <div style="margin: 12px 0;">
+                <strong>Authorization URL:</strong>
+                <pre style="background: #0f172a; color: #38bdf8; padding: 12px; border-radius: 6px; font-size: 11px; overflow-x: auto; margin-top: 6px; white-space: pre-wrap; word-break: break-all;">${escapeHtml(data.auth_url || "N/A")}</pre>
+              </div>
+              <div style="margin-top: 8px;">
+                <strong>Authorized Redirect URI:</strong>
+                <code style="background: var(--bg-main); padding: 4px 8px; border-radius: 4px; display: inline-block; margin-top: 4px;">${escapeHtml(data.redirect_uri || "/api/auth/oauth/google/callback")}</code>
+              </div>
+            </div>`
+          );
+        } else {
+          showModal(
+            "Google OAuth2 Configuration Guide",
+            `<div style="font-size: 13px; line-height: 1.6;">
+              <p><strong>Status:</strong> <span class="badge badge-warning">Awaiting .env Configuration</span></p>
+              <p style="margin-top: 8px;">Please set the following environment variables in your <code>.env</code> file:</p>
+              <div style="background: #0f172a; color: #38bdf8; padding: 12px; border-radius: 6px; font-size: 12px; font-family: monospace; line-height: 1.5; margin: 10px 0;">
+                <div>GOOGLE_CLIENT_ID=your_google_client_id</div>
+                <div>GOOGLE_CLIENT_SECRET=your_google_client_secret</div>
+                <div>GOOGLE_REDIRECT_URI=http://localhost:8080/api/auth/oauth/google/callback</div>
+              </div>
+              <p style="font-size: 12px; color: var(--text-muted); margin-top: 6px;">Once you add these to <code>.env</code> and restart the app, Google Sign-In will be immediately available.</p>
+            </div>`
+          );
+        }
+      } catch (e) {
+        showModal("Google OAuth2", `<p>${escapeHtml(e.message)}</p>`);
+      }
+    });
+  }
+
+  // Handle Exchange Login
+  if (formExchangeLogin) {
+    formExchangeLogin.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      hideAuthAlert();
+      btnLoginText.textContent = "Verifying with Exchange...";
+      btnSubmitExchangeLogin.disabled = true;
+
+      const payload = {
+        provider: "exchange",
+        host: authExchangeHost.value.trim(),
+        username: authExchangeUsername.value.trim(),
+        password: authExchangePassword.value,
+        allow_self_signed: authAllowSelfSigned.checked,
+      };
+
+      try {
+        const res = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.message || `Login failed (${res.status})`);
+        }
+
+        if (data.token) {
+          localStorage.setItem("auth_token", data.token);
+        }
+
+        hideAuthScreen();
+        showAlert("Authentication successful! Welcome to Smart Email Forwarder.", "success");
+        initApplicationAfterAuth(data.user);
+      } catch (err) {
+        showAuthAlert(err.message, "error");
+      } finally {
+        btnLoginText.textContent = "Sign In with Exchange Mailbox";
+        btnSubmitExchangeLogin.disabled = false;
+      }
+    });
+  }
+
+  // Handle Logout
+  if (btnSignOut) {
+    btnSignOut.addEventListener("click", async () => {
+      try {
+        await api("/auth/logout", { method: "POST" });
+      } catch (_) {}
+      localStorage.removeItem("auth_token");
+      showAuthScreen();
+      showAuthAlert("You have been signed out.", "info");
+    });
+  }
+
+  // Google OAuth2 Configuration in Settings Tab
+  async function loadGoogleOAuthSlotConfig() {
+    if (!formGoogleOAuthSlot) return;
+    try {
+      const data = await api("/auth/oauth/google/config");
+      const cfg = data.config || data;
+      if (googleClientId && cfg.client_id) {
+        googleClientId.value = cfg.client_id;
+      }
+      if (googleClientSecret && cfg.client_secret) {
+        googleClientSecret.placeholder = "••••••••";
+      }
+      const statusBadge = document.getElementById("googleSettingsStatus");
+      if (statusBadge) {
+        if (data.is_configured) {
+          statusBadge.textContent = data.from_env ? "Configured via .env" : "Configured";
+          statusBadge.className = "badge badge-success";
+        } else {
+          statusBadge.textContent = "Awaiting .env Configuration";
+          statusBadge.className = "badge badge-warning";
+        }
+      }
+    } catch (_) {}
+  }
+
+  if (formGoogleOAuthSlot) {
+    formGoogleOAuthSlot.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      try {
+        const payload = {
+          enabled: false,
+          client_id: googleClientId.value.trim() || null,
+          client_secret: googleClientSecret.value.trim() || null,
+          redirect_uri: "/api/auth/oauth/google/callback",
+          scopes: ["openid", "email", "profile", "https://mail.google.com/"],
+        };
+        await api("/auth/oauth/google/config", {
+          method: "POST",
+          body: JSON.stringify(payload),
+        });
+        showAlert("Google OAuth2 configuration saved.", "success");
+        loadGoogleOAuthSlotConfig();
+      } catch (err) {
+        showAlert(`Failed to save OAuth config: ${err.message}`, "error");
+      }
+    });
+  }
+
+  if (btnTestGoogleSlot) {
+    btnTestGoogleSlot.addEventListener("click", async () => {
+      try {
+        const res = await fetch("/api/auth/oauth/google?format=json");
+        const data = await res.json();
+        if (data.is_configured) {
+          showModal(
+            "Google OAuth2 Test",
+            `<div style="font-size: 13px; line-height: 1.6;">
+              <p><strong>Status:</strong> <span class="badge badge-success" style="background: rgba(16, 185, 129, 0.2); color: #10b981;">Active & Ready</span></p>
+              <p><strong>Provider:</strong> Google Workspace / Gmail OAuth 2.0</p>
+              <div style="margin-top: 10px;">
+                <strong>Generated Auth URL:</strong>
+                <pre style="background: #0f172a; color: #38bdf8; padding: 10px; border-radius: 6px; font-size: 11px; word-break: break-all; white-space: pre-wrap;">${escapeHtml(data.auth_url || "N/A")}</pre>
+              </div>
+            </div>`
+          );
+        } else {
+          showModal(
+            "Google OAuth2 Test",
+            `<div style="font-size: 13px; line-height: 1.6;">
+              <p><strong>Status:</strong> <span class="badge badge-warning">Credentials Missing</span></p>
+              <p style="margin-top: 8px;">${escapeHtml(data.message)}</p>
+              <p style="font-size: 12px; color: var(--text-muted); margin-top: 8px;">Please update <code>.env</code> with your Google OAuth 2.0 Web Application credentials.</p>
+            </div>`
+          );
+        }
+      } catch (e) {
+        showAlert(`Error testing OAuth endpoint: ${e.message}`, "error");
+      }
+    });
+  }
+
+  async function checkAuthStatus() {
+    try {
+      const res = await fetch("/api/auth/status", {
+        headers: {
+          "Authorization": `Bearer ${localStorage.getItem("auth_token") || ""}`,
+        },
+      });
+      const data = await res.json();
+
+      if (data.default_host && authExchangeHost) {
+        authExchangeHost.value = data.default_host;
+      }
+      if (data.default_username && authExchangeUsername) {
+        authExchangeUsername.value = data.default_username;
+      }
+      if (authAllowSelfSigned) {
+        authAllowSelfSigned.checked = !!data.default_allow_self_signed;
+      }
+      if (data.exchange_configured) {
+        const hintEl = document.getElementById("authHostHint");
+        if (hintEl) {
+          hintEl.textContent = `Configured Mailbox Server: ${data.default_host || ""} (IMAP/TLS)`;
+        }
+      }
+
+      if (data.google_configured) {
+        if (googleConfiguredView) googleConfiguredView.classList.remove("hidden");
+        if (googleUnconfiguredView) googleUnconfiguredView.classList.add("hidden");
+        if (googleTabBadge) {
+          googleTabBadge.textContent = "Default";
+          googleTabBadge.className = "auth-pill auth-pill-active";
+        }
+      } else {
+        if (googleConfiguredView) googleConfiguredView.classList.add("hidden");
+        if (googleUnconfiguredView) googleUnconfiguredView.classList.remove("hidden");
+        if (googleTabBadge) {
+          googleTabBadge.textContent = ".env needed";
+          googleTabBadge.className = "auth-pill auth-pill-slot";
+        }
+      }
+      switchAuthTab("google");
+
+      if (data.authenticated && data.user) {
+        hideAuthScreen();
+        initApplicationAfterAuth(data.user);
+      } else {
+        showAuthScreen();
+        if (data.default_username && authExchangePassword) {
+          setTimeout(() => authExchangePassword.focus(), 150);
+        }
+      }
+    } catch (_) {
+      showAuthScreen();
+    }
+  }
+
+  function initApplicationAfterAuth(user) {
+    if (userDisplayName && user) {
+      userDisplayName.textContent = user.username;
+    }
+    if (userAvatar && user && user.username) {
+      userAvatar.textContent = user.username.substring(0, 2).toUpperCase();
+    }
+    if (authProviderTag) {
+      authProviderTag.textContent = user && user.provider === "google" ? "Google Account" : "Exchange Mailbox";
+    }
+
+    loadConfig();
+    loadStatus();
+    loadActivity();
+    loadGoogleOAuthSlotConfig();
+
+    if (!statusPollTimer) {
+      statusPollTimer = setInterval(() => {
+        loadStatus();
+        if (currentTab === "dashboard") {
+          loadActivity();
+        } else if (currentTab === "process" && isProcAutoRefresh) {
+          loadProcessMetrics();
+        }
+      }, 3000);
+    }
+  }
+
+  // Initialize Auth
+  checkAuthStatus();
 })();

@@ -26,7 +26,18 @@ pub fn build_router_with_start(
         start_time,
     };
 
-    let api_router = Router::new()
+    let public_api_router = Router::new()
+        .route("/auth/status", get(routes::get_auth_status))
+        .route("/auth/providers", get(routes::get_auth_providers))
+        .route("/auth/login", post(routes::auth_login))
+        .route("/auth/oauth/google", get(routes::oauth_google))
+        .route("/auth/oauth/google/callback", get(routes::oauth_google_callback));
+
+    let protected_api_router = Router::new()
+        .route("/auth/logout", post(routes::auth_logout))
+        .route("/auth/me", get(routes::get_auth_me))
+        .route("/auth/oauth/google/config", get(routes::get_google_oauth_config))
+        .route("/auth/oauth/google/config", post(routes::save_google_oauth_config))
         .route("/status", get(routes::get_status))
         .route("/process", get(routes::get_process_status))
         .route("/process/health", get(routes::get_process_health))
@@ -48,6 +59,13 @@ pub fn build_router_with_start(
         .route("/mailbox/raw", get(routes::get_mailbox_raw))
         .route("/mailbox/forward", post(routes::forward_mailbox_message))
         .route("/mailbox/mark-read", post(routes::mark_mailbox_message_read))
+        .route_layer(axum::middleware::from_fn_with_state(
+            state.clone(),
+            routes::auth_middleware,
+        ));
+
+    let api_router = public_api_router
+        .merge(protected_api_router)
         .with_state(state);
 
     Router::new()

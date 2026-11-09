@@ -335,4 +335,103 @@ pub struct MailboxMarkReadRequest {
     pub seen: bool,
 }
 
+// Authentication Models
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UserSession {
+    pub token: String,
+    pub username: String,
+    pub provider: String,
+    pub created_at: String,
+    pub expires_at: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct LoginRequest {
+    #[serde(default)]
+    pub provider: Option<String>, // "exchange" or "google"
+    pub username: String,
+    pub password: String,
+    pub host: Option<String>,
+    pub port: Option<u16>,
+    pub security: Option<String>,
+    pub allow_self_signed: Option<bool>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AuthStatusResponse {
+    pub authenticated: bool,
+    pub user: Option<UserSession>,
+    pub exchange_configured: bool,
+    #[serde(default)]
+    pub google_configured: bool,
+    #[serde(default)]
+    pub default_provider: Option<String>,
+    pub default_host: Option<String>,
+    pub default_username: Option<String>,
+    #[serde(default)]
+    pub default_allow_self_signed: bool,
+    #[serde(default)]
+    pub default_port: Option<u16>,
+    #[serde(default)]
+    pub default_security: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AuthProviderInfo {
+    pub id: String,
+    pub name: String,
+    pub description: String,
+    pub is_active: bool,
+    pub stage: String, // "active" or "next_stage"
+    pub icon: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AuthProvidersResponse {
+    pub providers: Vec<AuthProviderInfo>,
+    pub exchange_configured: bool,
+}
+
+// Google OAuth2 Models (Slot for Next Stage)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GoogleOAuthConfig {
+    #[serde(default)]
+    pub enabled: bool,
+    #[serde(default)]
+    pub client_id: Option<String>,
+    #[serde(default)]
+    pub client_secret: Option<String>,
+    #[serde(default = "default_google_redirect_uri")]
+    pub redirect_uri: String,
+    #[serde(default = "default_google_scopes")]
+    pub scopes: Vec<String>,
+    #[serde(default)]
+    pub auth_url_preview: Option<String>,
+}
+
+fn default_google_redirect_uri() -> String {
+    "http://localhost:8080/api/auth/oauth/google/callback".to_string()
+}
+
+fn default_google_scopes() -> Vec<String> {
+    vec![
+        "openid".to_string(),
+        "email".to_string(),
+        "profile".to_string(),
+    ]
+}
+
+impl Default for GoogleOAuthConfig {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            client_id: None,
+            client_secret: None,
+            redirect_uri: default_google_redirect_uri(),
+            scopes: default_google_scopes(),
+            auth_url_preview: None,
+        }
+    }
+}
+
 
