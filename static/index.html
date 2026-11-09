@@ -28,6 +28,15 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
           <span>Dashboard</span>
         </button>
+        <button class="nav-item" data-tab="process">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/>
+            <rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>
+            <line x1="6" y1="6" x2="6.01" y2="6"/>
+            <line x1="6" y1="18" x2="6.01" y2="18"/>
+          </svg>
+          <span>Process Monitor</span>
+        </button>
         <button class="nav-item" data-tab="exchange">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
           <span>Exchange Mailbox</span>
@@ -143,6 +152,303 @@
               </tbody>
             </table>
           </div>
+        </div>
+      </section>
+
+      <!-- Tab Content: Process Monitor -->
+      <section id="tab-process" class="tab-pane">
+        <!-- Process Overview Hero Banner -->
+        <div class="process-hero-card">
+          <div class="process-hero-info">
+            <div class="process-avatar">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="4" y="4" width="16" height="16" rx="2" ry="2"/>
+                <rect x="9" y="9" width="6" height="6"/>
+                <line x1="9" y1="1" x2="9" y2="4"/>
+                <line x1="15" y1="1" x2="15" y2="4"/>
+                <line x1="9" y1="20" x2="9" y2="23"/>
+                <line x1="15" y1="20" x2="15" y2="23"/>
+                <line x1="20" y1="9" x2="23" y2="9"/>
+                <line x1="20" y1="14" x2="23" y2="14"/>
+                <line x1="1" y1="9" x2="4" y2="9"/>
+                <line x1="1" y1="14" x2="4" y2="14"/>
+              </svg>
+            </div>
+            <div>
+              <div class="process-title-row">
+                <h2>smart-email-forwarder</h2>
+                <span class="badge badge-success beacon-badge" id="procBadgeStatus">
+                  <span class="beacon-dot"></span> <span id="procStatusText">HEALTHY</span>
+                </span>
+                <span class="badge badge-neutral" id="procServiceMode">Interactive Console</span>
+              </div>
+              <p class="process-subtitle">
+                PID: <strong id="procPid">--</strong> &bull;
+                PPID: <span id="procPpid">--</span> &bull;
+                Uptime: <strong id="procUptime">--</strong> &bull;
+                Started: <span id="procStartedAt">--</span>
+              </p>
+            </div>
+          </div>
+          <div class="process-hero-actions">
+            <button class="btn btn-secondary btn-sm" id="btnToggleProcAutoRefresh">
+              <span class="icon">&#9881;</span> Auto-Refresh: <strong id="procAutoRefreshLabel">ON (3s)</strong>
+            </button>
+            <button class="btn btn-outline btn-sm" id="btnRefreshProcess">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="23 4 23 10 17 10"/>
+                <polyline points="1 20 1 14 7 14"/>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+              </svg>
+              <span>Refresh Metrics</span>
+            </button>
+            <button class="btn btn-primary btn-sm" id="btnRunHealthCheck">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+              </svg>
+              <span>Run Health Check</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Resource Telemetry Grid -->
+        <div class="stats-grid">
+          <!-- Memory Usage -->
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-title">Memory Usage (RSS)</span>
+              <span class="stat-icon">&#128190;</span>
+            </div>
+            <div class="stat-value" id="procMemRss">--</div>
+            <div class="metric-bar-wrapper">
+              <div class="metric-bar" id="procMemBar" style="width: 20%;"></div>
+            </div>
+            <div class="stat-footer flex-between">
+              <span>Virtual: <strong id="procMemVm">--</strong></span>
+              <span>Peak: <strong id="procMemPeak">--</strong></span>
+            </div>
+          </div>
+
+          <!-- CPU Cores & Load -->
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-title">CPU & Load Average</span>
+              <span class="stat-icon">&#9889;</span>
+            </div>
+            <div class="stat-value" id="procLoad1m">--</div>
+            <div class="stat-footer">
+              <div>Load (1m, 5m, 15m): <strong id="procLoadAll">--</strong></div>
+              <div style="margin-top:2px;">Available Cores: <strong id="procCpuCores">--</strong></div>
+            </div>
+          </div>
+
+          <!-- Active OS Threads -->
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-title">OS Threads</span>
+              <span class="stat-icon">&#128260;</span>
+            </div>
+            <div class="stat-value" id="procThreads">--</div>
+            <div class="stat-footer">
+              <span>Tokio async runtime & background workers</span>
+            </div>
+          </div>
+
+          <!-- Database Storage & Metrics -->
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-title">SQLite Database</span>
+              <span class="badge badge-success" id="procDbBadge">OK</span>
+            </div>
+            <div class="stat-value" id="procDbSize">--</div>
+            <div class="stat-footer flex-between">
+              <span>Processed: <strong id="procDbProcessed">0</strong></span>
+              <span>Journal: <strong id="procDbJournal">WAL</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Subsystems Health & Operational Status -->
+        <div class="content-card">
+          <div class="card-header flex-between">
+            <div>
+              <h3>Service Subsystems & Component Status</h3>
+              <p class="card-desc">Real-time status of internal process modules, worker loops, and network clients.</p>
+            </div>
+            <span class="badge badge-neutral" id="procLastUpdated">Updated: Just now</span>
+          </div>
+          
+          <div class="subsystems-grid">
+            <!-- Background Poller Subsystem -->
+            <div class="subsystem-card">
+              <div class="subsystem-header">
+                <div class="subsystem-title">
+                  <span class="status-dot active" id="subPollerDot"></span>
+                  <h4>Background Poller Worker</h4>
+                </div>
+                <span class="badge badge-success" id="subPollerBadge">Active</span>
+              </div>
+              <div class="subsystem-body">
+                <div class="subsystem-row">
+                  <span>Interval:</span>
+                  <strong id="subPollerInterval">1 min</strong>
+                </div>
+                <div class="subsystem-row">
+                  <span>Next Poll:</span>
+                  <strong id="subPollerNext">In 30s</strong>
+                </div>
+                <div class="subsystem-row">
+                  <span>Forwarded / Failed:</span>
+                  <span><strong id="subPollerForwarded">0</strong> / <strong id="subPollerFailed" class="text-danger">0</strong></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- SQLite Engine Subsystem -->
+            <div class="subsystem-card">
+              <div class="subsystem-header">
+                <div class="subsystem-title">
+                  <span class="status-dot active" id="subDbDot"></span>
+                  <h4>SQLite Storage Engine</h4>
+                </div>
+                <span class="badge badge-success" id="subDbBadge">Connected</span>
+              </div>
+              <div class="subsystem-body">
+                <div class="subsystem-row">
+                  <span>Database File:</span>
+                  <code class="path-truncate" id="subDbPath" title="data/forwarder.db">data/forwarder.db</code>
+                </div>
+                <div class="subsystem-row">
+                  <span>Integrity Check:</span>
+                  <strong id="subDbIntegrity">Valid (ok)</strong>
+                </div>
+                <div class="subsystem-row">
+                  <span>Stored Logs:</span>
+                  <strong id="subDbLogs">0 entries</strong>
+                </div>
+              </div>
+            </div>
+
+            <!-- Exchange IMAP Connection Subsystem -->
+            <div class="subsystem-card">
+              <div class="subsystem-header">
+                <div class="subsystem-title">
+                  <span class="status-dot active" id="subImapDot"></span>
+                  <h4>Inbound Exchange IMAP</h4>
+                </div>
+                <span class="badge badge-neutral" id="subImapBadge">Checking...</span>
+              </div>
+              <div class="subsystem-body">
+                <div class="subsystem-row">
+                  <span>Configured Server:</span>
+                  <span id="subImapHost">--</span>
+                </div>
+                <div class="subsystem-row">
+                  <span>Security Mode:</span>
+                  <span id="subImapSec">--</span>
+                </div>
+                <div class="subsystem-row">
+                  <span>Target Folder:</span>
+                  <strong id="subImapFolder">INBOX</strong>
+                </div>
+              </div>
+            </div>
+
+            <!-- SMTP Relay Subsystem -->
+            <div class="subsystem-card">
+              <div class="subsystem-header">
+                <div class="subsystem-title">
+                  <span class="status-dot active" id="subSmtpDot"></span>
+                  <h4>Outbound SMTP Relay</h4>
+                </div>
+                <span class="badge badge-neutral" id="subSmtpBadge">Checking...</span>
+              </div>
+              <div class="subsystem-body">
+                <div class="subsystem-row">
+                  <span>Relay Server:</span>
+                  <span id="subSmtpHost">--</span>
+                </div>
+                <div class="subsystem-row">
+                  <span>Relay Port & Sec:</span>
+                  <span id="subSmtpPortSec">--</span>
+                </div>
+                <div class="subsystem-row">
+                  <span>Relay Sender:</span>
+                  <span id="subSmtpSender">--</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Diagnostic Health Check Results Panel -->
+        <div class="content-card" id="healthCheckCard">
+          <div class="card-header flex-between">
+            <div>
+              <h3>Live Subsystem Diagnostics</h3>
+              <p class="card-desc">Latency measurements and connectivity validation across internal modules.</p>
+            </div>
+            <span class="badge badge-success" id="healthOverallBadge">Ready for Diagnostics</span>
+          </div>
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Subsystem</th>
+                  <th>Status</th>
+                  <th>Response Latency</th>
+                  <th>Diagnostic Details</th>
+                </tr>
+              </thead>
+              <tbody id="healthTableBody">
+                <tr>
+                  <td colspan="4" class="text-center empty-state">Click "Run Health Check" to execute diagnostics.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Process Runtime Environment & Binary Specs -->
+        <div class="content-card">
+          <div class="card-header">
+            <h3>Process Environment & Binary Specifications</h3>
+            <p class="card-desc">Host operating system details, working directory, and startup arguments.</p>
+          </div>
+          <table class="env-table">
+            <tbody>
+              <tr>
+                <td class="env-label">Process ID (PID)</td>
+                <td class="env-val"><code id="envPid">--</code></td>
+                <td class="env-label">Parent PID (PPID)</td>
+                <td class="env-val"><code id="envPpid">--</code></td>
+              </tr>
+              <tr>
+                <td class="env-label">Platform / Arch</td>
+                <td class="env-val"><span id="envPlatform">--</span></td>
+                <td class="env-label">CPU Cores</td>
+                <td class="env-val"><span id="envCores">--</span></td>
+              </tr>
+              <tr>
+                <td class="env-label">Executable Path</td>
+                <td class="env-val" colspan="3"><code class="path-truncate" id="envExePath">--</code></td>
+              </tr>
+              <tr>
+                <td class="env-label">Working Directory</td>
+                <td class="env-val" colspan="3"><code class="path-truncate" id="envWorkDir">--</code></td>
+              </tr>
+              <tr>
+                <td class="env-label">Command Line</td>
+                <td class="env-val" colspan="3"><code id="envCmdArgs">--</code></td>
+              </tr>
+              <tr>
+                <td class="env-label">Application Version</td>
+                <td class="env-val"><span id="envAppVersion">v0.1.0</span></td>
+                <td class="env-label">Process Started At</td>
+                <td class="env-val"><span id="envStartedTime">--</span></td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </section>
 

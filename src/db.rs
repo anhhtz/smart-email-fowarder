@@ -1,24 +1,30 @@
-use crate::models::{AppConfig, ExchangeConfig, ForwardLog, ForwardingConfig, SmtpConfig, SystemLogEntry};
+use crate::models::{
+    AppConfig, DatabaseMetrics, ExchangeConfig, ForwardLog, ForwardingConfig, SmtpConfig,
+    SystemLogEntry,
+};
 use chrono::Utc;
 use rusqlite::{params, Connection, Result};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use tracing::info;
 
 #[derive(Clone)]
 pub struct Database {
     conn: Arc<Mutex<Connection>>,
+    path: Option<PathBuf>,
 }
 
 impl Database {
     pub fn new<P: AsRef<Path>>(path: P) -> Result<Self> {
-        if let Some(parent) = path.as_ref().parent() {
+        let path_ref = path.as_ref();
+        if let Some(parent) = path_ref.parent() {
             let _ = std::fs::create_dir_all(parent);
         }
 
-        let conn = Connection::open(path)?;
+        let conn = Connection::open(path_ref)?;
         let db = Self {
             conn: Arc::new(Mutex::new(conn)),
+            path: Some(path_ref.to_path_buf()),
         };
         db.init_tables()?;
         Ok(db)
@@ -28,9 +34,73 @@ impl Database {
         let conn = Connection::open_in_memory()?;
         let db = Self {
             conn: Arc::new(Mutex::new(conn)),
+            path: None,
         };
         db.init_tables()?;
         Ok(db)
+    }
+
+    pub fn get_path(&self) -> Option<PathBuf> {
+        self.path.clone()
+    }
+
+    pub fn get_db_metrics(&self) -> Result<DatabaseMetrics> {
+        let conn = self.conn.lock().unwrap();
+
+        let path_str = self
+            .path
+            .as_ref()
+            .map(|p| p.to_string_lossy().to_string())
+            .unwrap_or_else(|| ":memory:".to_string());
+
+        let size_bytes = if let Some(ref p) = self.path {
+            std::fs::metadata(p).map(|m| m.len()).unwrap_or(0)
+        } else {
+            0
+        };
+
+        let total_processed_emails: u64 = conn
+            .query_row("SELECT COUNT(*) FROM processed_emails;", [], |r| r.get(0))
+            .unwrap_or(0);
+
+        let total_forward_logs: u64 = conn
+            .query_row("SELECT COUNT(*) FROM forward_logs;", [], |r| r.get(0))
+            .unwrap_or(0);
+
+        let total_system_logs: u64 = conn
+            .query_row("SELECT COUNT(*) FROM system_logs;", [], |r| r.get(0))
+            .unwrap_or(0);
+
+        let integrity_status: String = conn
+            .query_row("PRAGMA integrity_check;", [], |r| r.get(0))
+            .unwrap_or_else(|_| "unknown".to_string());
+
+        let journal_mode: String = conn
+            .query_row("PRAGMA journal_mode;", [], |r| r.get(0))
+            .unwrap_or_else(|_| "unknown".to_string());
+
+        let is_healthy = integrity_status == "ok";
+        let size_formatted = crate::services::process::format_bytes(size_bytes);
+
+        Ok(DatabaseMetrics {
+            path: path_str,
+            size_bytes,
+            size_formatted,
+            total_processed_emails,
+            total_forward_logs,
+            total_system_logs,
+            integrity_status,
+            journal_mode: journal_mode.to_uppercase(),
+            is_healthy,
+        })
+    }
+
+    pub fn ping(&self) -> Result<f64> {
+        let start = std::time::Instant::now();
+        let conn = self.conn.lock().unwrap();
+        let _: i64 = conn.query_row("SELECT 1;", [], |r| r.get(0))?;
+        let elapsed_ms = start.elapsed().as_secs_f64() * 1000.0;
+        Ok(elapsed_ms)
     }
 
     fn init_tables(&self) -> Result<()> {

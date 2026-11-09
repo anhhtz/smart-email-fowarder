@@ -12,10 +12,24 @@ use tower_http::cors::CorsLayer;
 use tower_http::trace::TraceLayer;
 
 pub fn build_router(db: Database, poller: Arc<PollerManager>) -> Router {
-    let state = AppState { db, poller };
+    build_router_with_start(db, poller, chrono::Utc::now())
+}
+
+pub fn build_router_with_start(
+    db: Database,
+    poller: Arc<PollerManager>,
+    start_time: chrono::DateTime<chrono::Utc>,
+) -> Router {
+    let state = AppState {
+        db,
+        poller,
+        start_time,
+    };
 
     let api_router = Router::new()
         .route("/status", get(routes::get_status))
+        .route("/process", get(routes::get_process_status))
+        .route("/process/health", get(routes::get_process_health))
         .route("/config", get(routes::get_config))
         .route("/config/exchange", post(routes::save_exchange_config))
         .route("/config/forwarding", post(routes::save_forwarding_config))

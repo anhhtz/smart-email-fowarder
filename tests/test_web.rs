@@ -25,18 +25,28 @@ async fn test_serve_embedded_frontend() {
     let html = String::from_utf8_lossy(&body_bytes);
     assert!(html.contains("<!DOCTYPE html>"));
     assert!(html.contains("Smart Email Forwarder"));
+    assert!(html.contains("Process Monitor"));
+    assert!(html.contains("tab-process"));
+    assert!(html.contains("procMemRss"));
 
     // 2. Embedded CSS
     let req_css = Request::builder().uri("/static/css/style.css").body(Body::empty()).unwrap();
     let res_css = app.clone().oneshot(req_css).await.unwrap();
     assert_eq!(res_css.status(), StatusCode::OK);
     assert_eq!(res_css.headers().get("content-type").unwrap(), "text/css; charset=utf-8");
+    let css_bytes = res_css.into_body().collect().await.unwrap().to_bytes();
+    let css = String::from_utf8_lossy(&css_bytes);
+    assert!(css.contains("process-hero-card"));
 
     // 3. Embedded JS
     let req_js = Request::builder().uri("/static/js/app.js").body(Body::empty()).unwrap();
     let res_js = app.clone().oneshot(req_js).await.unwrap();
     assert_eq!(res_js.status(), StatusCode::OK);
     assert_eq!(res_js.headers().get("content-type").unwrap(), "application/javascript; charset=utf-8");
+    let js_bytes = res_js.into_body().collect().await.unwrap().to_bytes();
+    let js = String::from_utf8_lossy(&js_bytes);
+    assert!(js.contains("loadProcessMetrics"));
+    assert!(js.contains("runHealthCheck"));
 }
 
 #[tokio::test]
@@ -92,4 +102,31 @@ async fn test_api_poller_pause_resume() {
     let bytes2 = res_status2.into_body().collect().await.unwrap().to_bytes();
     let val2: serde_json::Value = serde_json::from_slice(&bytes2).unwrap();
     assert_eq!(val2["is_polling"], true);
+}
+
+#[tokio::test]
+async fn test_api_process_and_health() {
+    let app = create_test_app();
+
+    // 1. GET /api/process
+    let req_proc = Request::builder().uri("/api/process").body(Body::empty()).unwrap();
+    let res_proc = app.clone().oneshot(req_proc).await.unwrap();
+    assert_eq!(res_proc.status(), StatusCode::OK);
+    let bytes = res_proc.into_body().collect().await.unwrap().to_bytes();
+    let val: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
+    assert!(val["pid"].as_u64().unwrap() > 0);
+    assert_eq!(val["status"], "Running");
+    assert!(val["uptime_formatted"].as_str().is_some());
+    assert!(val["database"]["is_healthy"].as_bool().unwrap());
+    assert_eq!(val["poller"]["is_polling"], true);
+    assert!(val["memory"]["rss_formatted"].as_str().is_some());
+
+    // 2. GET /api/process/health
+    let req_health = Request::builder().uri("/api/process/health").body(Body::empty()).unwrap();
+    let res_health = app.clone().oneshot(req_health).await.unwrap();
+    assert_eq!(res_health.status(), StatusCode::OK);
+    let bytes_health = res_health.into_body().collect().await.unwrap().to_bytes();
+    let val_health: serde_json::Value = serde_json::from_slice(&bytes_health).unwrap();
+    assert!(val_health["overall_status"].as_str().is_some());
+    assert!(val_health["checks"].as_array().unwrap().len() >= 4);
 }

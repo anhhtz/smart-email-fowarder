@@ -116,3 +116,65 @@ pub struct SyncResult {
     pub forwarded_count: usize,
     pub failed_count: usize,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ProcessMemoryInfo {
+    pub rss_bytes: Option<u64>,
+    pub rss_formatted: String,
+    pub vmsize_bytes: Option<u64>,
+    pub vmsize_formatted: String,
+    pub vmpeak_bytes: Option<u64>,
+    pub vmpeak_formatted: String,
+    pub thread_count: Option<usize>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DatabaseMetrics {
+    pub path: String,
+    pub size_bytes: u64,
+    pub size_formatted: String,
+    pub total_processed_emails: u64,
+    pub total_forward_logs: u64,
+    pub total_system_logs: u64,
+    pub integrity_status: String,
+    pub journal_mode: String,
+    pub is_healthy: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SubsystemHealthCheck {
+    pub name: String,
+    pub status: String, // "UP", "WARN", "DOWN"
+    pub latency_ms: f64,
+    pub message: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ProcessHealthReport {
+    pub overall_status: String, // "HEALTHY", "WARNING", "DEGRADED"
+    pub checked_at: String,
+    pub checks: Vec<SubsystemHealthCheck>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ProcessStatus {
+    pub pid: u32,
+    pub ppid: Option<u32>,
+    pub service_mode: String, // "Interactive Console", "Windows Service", "systemd Daemon"
+    pub status: String,
+    pub started_at: String,
+    pub uptime_seconds: u64,
+    pub uptime_formatted: String,
+    pub exe_path: String,
+    pub current_dir: String,
+    pub cmd_args: Vec<String>,
+    pub os: String,
+    pub arch: String,
+    pub cpu_cores: usize,
+    pub load_average: Option<Vec<f64>>,
+    pub memory: ProcessMemoryInfo,
+    pub database: DatabaseMetrics,
+    pub poller: SystemStatus,
+    pub app_version: String,
+}
+

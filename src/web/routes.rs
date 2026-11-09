@@ -17,6 +17,7 @@ use std::sync::Arc;
 pub struct AppState {
     pub db: Database,
     pub poller: Arc<PollerManager>,
+    pub start_time: chrono::DateTime<chrono::Utc>,
 }
 
 #[derive(Deserialize)]
@@ -28,6 +29,23 @@ pub struct LogQuery {
 pub async fn get_status(State(state): State<AppState>) -> impl IntoResponse {
     let status = state.poller.get_status().await;
     Json(status)
+}
+
+// GET /api/process
+pub async fn get_process_status(State(state): State<AppState>) -> impl IntoResponse {
+    let poller_status = state.poller.get_status().await;
+    let proc_status = crate::services::process::collect_process_status(
+        &state.db,
+        poller_status,
+        state.start_time,
+    );
+    Json(proc_status)
+}
+
+// GET /api/process/health
+pub async fn get_process_health(State(state): State<AppState>) -> impl IntoResponse {
+    let report = crate::services::process::collect_health_report(&state.db, &state.poller).await;
+    Json(report)
 }
 
 // GET /api/config

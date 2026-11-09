@@ -27,6 +27,7 @@ The application is specifically engineered for **offline / air-gapped** enterpri
   - **Linux Mint**: Runs as a standard `systemd` daemon.
 - **Minimal Responsive Web UI**:
   - Dashboard with live status, sync stats, and activity table.
+  - **Process Monitor**: Real-time service process metrics (PID, PPID, memory RSS/VmSize/VmPeak, CPU load, active OS threads, SQLite storage size/integrity, subsystem health checks with round-trip latency, auto-refresh, and binary runtime specifications).
   - Instant connection test buttons for Exchange IMAP and SMTP relay.
   - Immediate "Sync Now" button and poller pause/resume.
   - Real-time event log viewer.
@@ -39,11 +40,11 @@ The application is specifically engineered for **offline / air-gapped** enterpri
 flowchart LR
     subgraph LAN["Internal Corporate LAN (Air-Gapped / No Public Internet)"]
         EX[("Internal MS Exchange Server\n• IMAP (Port 993/143)\n• SMTP Relay (Port 25/587)")]
-        
+
         subgraph Server["Windows Server 2019 / Linux Mint"]
             APP["smart-email-forwarder\n(Single Binary)\n• Background Poller\n• SQLite Database\n• Web UI (Port 8080)"]
         end
-        
+
         ADMIN["Admin Browser\nhttp://localhost:8080"]
     end
 
@@ -61,7 +62,24 @@ flowchart LR
 
 ## Quick Start & Local Run
 
-### 1. Build the Binary
+### 1. Run in Development Mode (`dev`)
+
+```bash
+# Run directly in development mode (starts on port 8080)
+cargo run
+
+# Run with custom port and database path
+cargo run -- --port 8080 --db data/forwarder.db
+
+# Run with verbose debug logging enabled
+RUST_LOG=smart_email_forwarder=debug,tower_http=debug cargo run
+
+# Auto-reload on code changes (requires cargo-watch: cargo install cargo-watch)
+cargo watch -x "run -- --port 8080"
+```
+
+### 2. Build the Binary
+
 ```bash
 # Debug build
 cargo build
@@ -70,11 +88,13 @@ cargo build
 cargo build --release
 ```
 
-### 2. Run in Console Mode
+### 3. Run Release Binary in Console Mode
+
 ```bash
 # Starts the server on port 8080
 ./target/release/smart-email-forwarder --port 8080
 ```
+
 Open your browser to `http://localhost:8080`.
 
 ---
@@ -84,18 +104,23 @@ Open your browser to `http://localhost:8080`.
 Because Windows Server 2019 has no internet access, deployment is as simple as copying one file:
 
 ### Step 1: Copy Executable
+
 1. Build `smart-email-forwarder.exe` on a build workstation (`cargo build --release`).
 2. Copy `smart-email-forwarder.exe` and the `deploy/windows/` folder to the Windows Server (e.g. `C:\SmartEmailForwarder\`).
 
 ### Step 2: Install as an Automatic Windows Service
+
 Open Command Prompt **as Administrator** and run:
+
 ```cmd
 cd C:\SmartEmailForwarder
 deploy\windows\install_service.bat
 ```
+
 This registers the service via Windows' built-in `sc.exe`, sets it to auto-start on boot, configures automatic crash recovery (restarts within 5 seconds), and starts it immediately.
 
 ### Alternative Manual `sc.exe` Commands:
+
 ```cmd
 # Create Service
 sc.exe create "SmartEmailForwarder" binPath= "C:\SmartEmailForwarder\smart-email-forwarder.exe --service" start= auto DisplayName= "Smart Email Forwarder"
@@ -120,6 +145,7 @@ Access the Web UI from any workstation on the network: `http://<server-ip>:8080`
 ## Deployment on Linux Mint
 
 ### Step 1: Install Binary & Service File
+
 ```bash
 sudo mkdir -p /opt/smart-email-forwarder
 sudo cp target/release/smart-email-forwarder /opt/smart-email-forwarder/
@@ -131,6 +157,7 @@ sudo systemctl daemon-reload
 ```
 
 ### Step 2: Enable & Start Service
+
 ```bash
 # Start and enable on boot
 sudo systemctl enable --now email-forwarder.service
@@ -146,7 +173,7 @@ journalctl -u email-forwarder.service -f
 
 ## Configuration via Web UI (`http://localhost:8080`)
 
-The application provides a clean single-page interface with 5 tabs:
+The application provides a clean single-page interface with 6 tabs:
 
 1. **Dashboard**:
    - Current status (Active / Paused / Syncing).
@@ -154,7 +181,16 @@ The application provides a clean single-page interface with 5 tabs:
    - Next poll countdown timer and "Sync Now" button.
    - Live activity table showing recent forwarded emails with details modal.
 
-2. **Exchange Mailbox Settings**:
+2. **Process Monitor**:
+   - **Service Overview Hero**: Process ID (PID), Parent PID (PPID), Service Execution Mode (Interactive Console / Windows Service / systemd Service), Uptime, and pulsating health beacon.
+   - **Resource Telemetry**: Live Memory Usage (RSS, VmSize, VmPeak), CPU Cores, System Load Averages (1m, 5m, 15m), and active OS threads.
+   - **Storage Telemetry**: SQLite database file size on disk, journal mode, total processed message IDs, and PRAGMA integrity verification.
+   - **Component Subsystems**: Live operational status cards for Background Poller Worker, SQLite Storage Engine, Exchange IMAP connection, and Exchange SMTP relay.
+   - **Subsystem Health Diagnostics**: On-demand diagnostic ping testing latency across Tokio async runtime, SQLite engine, background poller, and Exchange/SMTP configurations.
+   - **Process Runtime Specifications**: Executable path, working directory, command-line arguments, operating system architecture, and start timestamp.
+   - **Controls**: Configurable auto-refresh toggle (3s interval) and manual refresh button.
+
+3. **Exchange Mailbox Settings**:
    - **Host / IP**: FQDN or IP of the Exchange Server (e.g. `mail.company.local`).
    - **Port**: `993` (SSL/TLS) or `143` (STARTTLS / Plain).
    - **Encryption**: `SSL/TLS`, `STARTTLS`, or `Plain`.
@@ -165,21 +201,21 @@ The application provides a clean single-page interface with 5 tabs:
    - **Accept Internal/Self-Signed SSL**: Toggle if your Exchange uses an internal CA certificate.
    - **Test Exchange Connection**: Validates login and folder access with one click.
 
-3. **Forwarding Rules**:
+4. **Forwarding Rules**:
    - **Destination Gmail Addresses**: One or multiple comma/newline-separated Gmail addresses.
    - **Subject Prefix**: Optional tag like `[Exchange-Fwd] `.
    - **Polling Interval**: In minutes (default: 1 min).
    - **Include Forwarding Header Banner**: Injects metadata box at top of body.
    - **Preserve Reply-To**: Sets original sender as `Reply-To`.
 
-4. **Exchange SMTP Relay Settings**:
+5. **Exchange SMTP Relay Settings**:
    - **Relay Host**: Internal Exchange Server host or IP (e.g. `mail.company.local`).
    - **Port**: `25` (standard unauthenticated internal relay), `587` (STARTTLS), or `465` (SSL).
    - **From Email & Name**: Authorized sender address (e.g. `forwarder@company.com`).
    - **Authentication**: Checkbox for credentials if relay requires authentication.
    - **Send Test Email**: Relays a verification email to test delivery to Gmail.
 
-5. **Activity Logs**:
+6. **Activity Logs**:
    - Real-time diagnostic stream of polling cycles, successful deliveries, and error details.
 
 ---
@@ -187,10 +223,13 @@ The application provides a clean single-page interface with 5 tabs:
 ## Automated Tests
 
 Run the full test suite offline:
+
 ```bash
 cargo test
 ```
+
 Tests cover:
+
 - RFC822 MIME parsing and body extraction.
 - PDF and binary attachment extraction and integrity.
 - SQLite deduplication and settings persistence with password masking.
