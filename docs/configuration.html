@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Configuration Guide - Smart Email Forwarder</title>
+  <meta name="description" content="Comprehensive guide to configuring Exchange IMAP, SMTP relay, forwarding rules, and CLI arguments in Smart Email Forwarder.">
+  <link rel="stylesheet" href="./assets/css/docs.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="docs-header">
+    <div style="display: flex; align-items: center; gap: 1rem;">
+      <button class="mobile-nav-toggle" id="mobile-nav-toggle" aria-label="Toggle navigation">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <a href="index.html" class="brand">
+        <div class="brand-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        </div>
+        <span>Smart Email Forwarder</span>
+        <span class="brand-badge">v0.1.0</span>
+      </a>
+    </div>
+
+    <div class="header-actions">
+      <div class="lang-switch">
+        <span class="lang-btn active">EN</span>
+        <span class="lang-divider">/</span>
+        <a href="./vi/configuration.html" class="lang-btn" title="Chuyển sang Tiếng Việt">VI</a>
+      </div>
+      <button class="search-trigger" id="search-trigger">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span>Search docs...</span>
+        <kbd class="search-shortcut">Ctrl K</kbd>
+      </button>
+      <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <a href="https://github.com/anhhtca/smart-email-fowarder" target="_blank" rel="noopener noreferrer" class="theme-toggle" aria-label="GitHub Repository">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+      </a>
+    </div>
+  </header>
+
+  <!-- Layout -->
+  <div class="docs-layout">
+    <!-- Sidebar -->
+    <aside class="docs-sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-title">Getting Started</div>
+        <ul class="sidebar-nav">
+          <li><a href="index.html" class="sidebar-link">Overview & Highlights</a></li>
+          <li><a href="index.html#quickstart" class="sidebar-link">Quick Start</a></li>
+          <li><a href="architecture.html" class="sidebar-link">System Architecture</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Deployment</div>
+        <ul class="sidebar-nav">
+          <li><a href="installation.html#windows" class="sidebar-link">Windows Server 2019</a></li>
+          <li><a href="installation.html#linux" class="sidebar-link">Linux Mint & Ubuntu</a></li>
+          <li><a href="installation.html#build" class="sidebar-link">Compiling from Source</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Configuration</div>
+        <ul class="sidebar-nav">
+          <li><a href="configuration.html#webui" class="sidebar-link active">Web Management UI</a></li>
+          <li><a href="configuration.html#imap" class="sidebar-link">Exchange IMAP Settings</a></li>
+          <li><a href="configuration.html#smtp" class="sidebar-link">Exchange SMTP Relay</a></li>
+          <li><a href="configuration.html#forwarding" class="sidebar-link">Forwarding Rules</a></li>
+          <li><a href="configuration.html#cli" class="sidebar-link">CLI Arguments & Flags</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Operations & Features</div>
+        <ul class="sidebar-nav">
+          <li><a href="operations.html#telemetry" class="sidebar-link">Process Monitor & Telemetry</a></li>
+          <li><a href="operations.html#health" class="sidebar-link">Subsystem Health Checks</a></li>
+          <li><a href="mailbox-explorer.html" class="sidebar-link">Mailbox Explorer</a></li>
+          <li><a href="operations.html#database" class="sidebar-link">Database Maintenance</a></li>
+          <li><a href="operations.html#troubleshooting" class="sidebar-link">Troubleshooting Guide</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Developers</div>
+        <ul class="sidebar-nav">
+          <li><a href="api.html" class="sidebar-link">REST API Reference</a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="docs-content">
+      <h1>Configuration Guide</h1>
+      <p class="docs-lead">
+        Learn how to configure Smart Email Forwarder using the embedded Web Administration Console or command-line parameters.
+      </p>
+
+      <h2 id="webui">Web Management UI</h2>
+      <p>
+        The application bundles a responsive web administration console directly inside the binary. Access it from any browser on the host machine at <a href="http://localhost:8080" target="_blank"><code>http://localhost:8080</code></a> (or <code>http://&lt;server-ip&gt;:8080</code> from another intranet computer).
+      </p>
+
+      <p>The console features six focused tabs:</p>
+      <ul>
+        <li><strong>Dashboard:</strong> Overview cards (Active/Paused state, total forwarded count, failure count), countdown to next poll cycle, immediate "Sync Now" button, and recent activity log.</li>
+        <li><strong>Process Monitor:</strong> Process execution telemetry, PID/PPID, memory allocation (RSS, VmSize, VmPeak), CPU load averages, active threads, and subsystem health diagnostics.</li>
+        <li><strong>Exchange Mailbox:</strong> Connection settings for querying the monitored Exchange mailbox over IMAP.</li>
+        <li><strong>Forwarding Rules:</strong> Destination recipient emails, subject prefixes, polling frequency, and email header adjustments.</li>
+        <li><strong>Exchange SMTP Relay:</strong> Connection parameters for relaying emails through Exchange out to Gmail.</li>
+        <li><strong>Activity Logs:</strong> Real-time streaming log viewer displaying diagnostic messages, sync runs, and error stacktraces.</li>
+      </ul>
+
+      <h2 id="imap">Exchange Mailbox (IMAP) Settings</h2>
+      <p>
+        These parameters govern how Smart Email Forwarder authenticates with and reads the corporate Exchange mailbox.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Field</th>
+              <th>Example</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Exchange Host / IP</strong></td>
+              <td><code>mail.corp.local</code> or <code>192.168.10.5</code></td>
+              <td>Hostname or IP of the Microsoft Exchange Server.</td>
+            </tr>
+            <tr>
+              <td><strong>Port</strong></td>
+              <td><code>993</code> or <code>143</code></td>
+              <td><code>993</code> for direct TLS/SSL; <code>143</code> for STARTTLS or plaintext.</td>
+            </tr>
+            <tr>
+              <td><strong>Encryption</strong></td>
+              <td><code>SSL/TLS</code></td>
+              <td>Choose <code>SSL/TLS</code> (implicit), <code>STARTTLS</code> (opportunistic), or <code>Plain</code>.</td>
+            </tr>
+            <tr>
+              <td><strong>Username</strong></td>
+              <td><code>CORP\user</code> or <code>user@corp.local</code></td>
+              <td>Active Directory account or primary SMTP address of the monitored mailbox.</td>
+            </tr>
+            <tr>
+              <td><strong>Password</strong></td>
+              <td><code>••••••••</code></td>
+              <td>Mailbox account password. Stored securely and masked across the UI and API.</td>
+            </tr>
+            <tr>
+              <td><strong>Mailbox Folder</strong></td>
+              <td><code>INBOX</code></td>
+              <td>The IMAP folder to poll for incoming messages (default: <code>INBOX</code>).</td>
+            </tr>
+            <tr>
+              <td><strong>Mark as Read</strong></td>
+              <td>Enabled</td>
+              <td>When checked, forwarded emails will have the <code>\Seen</code> flag set in Exchange.</td>
+            </tr>
+            <tr>
+              <td><strong>Accept Self-Signed SSL</strong></td>
+              <td>Enabled</td>
+              <td>Enables trusting corporate internal Root CA and self-signed certificates without errors.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout callout-tip">
+        <div class="callout-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          Instant Test Exchange Connection
+        </div>
+        <p>Before saving, click the <strong>"Test Exchange Connection"</strong> button. The application performs a live handshake, authenticates with Exchange, and reports back the round-trip latency and folder status.</p>
+      </div>
+
+      <h2 id="smtp">Exchange SMTP Relay Settings</h2>
+      <p>
+        Emails are not dispatched directly to Google from the host server. Instead, they are routed through the internal Exchange Server's SMTP Receive Connector, which handles outbound internet delivery.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Field</th>
+              <th>Example</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Relay Host</strong></td>
+              <td><code>mail.corp.local</code></td>
+              <td>Internal Exchange Server host or IP.</td>
+            </tr>
+            <tr>
+              <td><strong>Port</strong></td>
+              <td><code>25</code> (standard internal) or <code>587</code></td>
+              <td>Port <code>25</code> is standard for unauthenticated internal relays; <code>587</code> for STARTTLS.</td>
+            </tr>
+            <tr>
+              <td><strong>From Email Address</strong></td>
+              <td><code>forwarder@corp.local</code></td>
+              <td>The authenticated sender address authorized on the Exchange Receive Connector.</td>
+            </tr>
+            <tr>
+              <td><strong>From Display Name</strong></td>
+              <td><code>Exchange Relay</code></td>
+              <td>Friendly display name appearing in the recipient's email client.</td>
+            </tr>
+            <tr>
+              <td><strong>Requires Authentication</strong></td>
+              <td>Disabled (Port 25) / Enabled</td>
+              <td>Toggle if your Exchange Receive Connector requires SMTP AUTH credentials.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout callout-info">
+        <div class="callout-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          Exchange Receive Connector Tip
+        </div>
+        <p>In Exchange Admin Center (EAC) &rarr; <strong>Mail Flow &rarr; Receive Connectors</strong>, ensure the host server's IP is added to the allowed IP ranges of your Internal Relay connector with the <code>ExternallySecured</code> or <code>AnonymousUsers</code> permission group enabled.</p>
+      </div>
+
+      <h2 id="forwarding">Forwarding Rules</h2>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Setting</th>
+              <th>Default</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Destination Addresses</strong></td>
+              <td><em>Required</em></td>
+              <td>One or more target addresses (e.g. <code>user@gmail.com, ops@gmail.com</code>). Comma or newline separated.</td>
+            </tr>
+            <tr>
+              <td><strong>Subject Prefix</strong></td>
+              <td><code>[Exchange-Fwd] </code></td>
+              <td>Optional tag prepended to the forwarded email's subject line for Gmail filtering.</td>
+            </tr>
+            <tr>
+              <td><strong>Polling Interval</strong></td>
+              <td><code>1</code> (minute)</td>
+              <td>Frequency in minutes for querying the Exchange mailbox. Range: 1 to 1440 minutes.</td>
+            </tr>
+            <tr>
+              <td><strong>Forwarding Banner</strong></td>
+              <td>Enabled</td>
+              <td>Injects a prominent summary banner at the top of the forwarded email body showing original sender, date, and recipients.</td>
+            </tr>
+            <tr>
+              <td><strong>Preserve Reply-To</strong></td>
+              <td>Enabled</td>
+              <td>Sets the original email sender as the <code>Reply-To</code> header so hitting "Reply" in Gmail replies directly to the original author.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 id="cli">CLI Arguments &amp; Flags</h2>
+      <p>When starting the binary from command line or service definition:</p>
+
+      <pre><code class="language-bash">smart-email-forwarder [OPTIONS]</code></pre>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Argument</th>
+              <th>Type</th>
+              <th>Default</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>-p, --port</code></td>
+              <td>Integer</td>
+              <td><code>8080</code></td>
+              <td>HTTP port for Web Console and REST API.</td>
+            </tr>
+            <tr>
+              <td><code>--host</code></td>
+              <td>String</td>
+              <td><code>0.0.0.0</code></td>
+              <td>Interface IP to bind (<code>127.0.0.1</code> for local only, <code>0.0.0.0</code> for network access).</td>
+            </tr>
+            <tr>
+              <td><code>--db</code></td>
+              <td>Path</td>
+              <td><code>data/forwarder.db</code></td>
+              <td>Path to SQLite database file. Created automatically with parent folders.</td>
+            </tr>
+            <tr>
+              <td><code>--service</code></td>
+              <td>Flag</td>
+              <td><code>false</code></td>
+              <td>Invoked by Windows Service Control Manager to signal Windows service execution mode.</td>
+            </tr>
+            <tr>
+              <td><code>-h, --help</code></td>
+              <td>Flag</td>
+              <td>-</td>
+              <td>Displays help and usage manual.</td>
+            </tr>
+            <tr>
+              <td><code>-V, --version</code></td>
+              <td>Flag</td>
+              <td>-</td>
+              <td>Displays software version string.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="page-nav-footer">
+        <a href="installation.html" class="page-nav-btn">
+          <span class="page-nav-label">Previous</span>
+          <span class="page-nav-title">&larr; Installation & Deployment</span>
+        </a>
+        <a href="operations.html" class="page-nav-btn" style="text-align: right;">
+          <span class="page-nav-label">Next</span>
+          <span class="page-nav-title">Operations & Monitoring &rarr;</span>
+        </a>
+      </div>
+    </main>
+
+    <!-- Table of Contents -->
+    <aside class="docs-toc">
+      <div class="toc-title">On this page</div>
+      <ul class="toc-nav">
+        <li><a href="#webui">Web Management UI</a></li>
+        <li><a href="#imap">Exchange IMAP Settings</a></li>
+        <li><a href="#smtp">Exchange SMTP Relay</a></li>
+        <li><a href="#forwarding">Forwarding Rules</a></li>
+        <li><a href="#cli">CLI Arguments & Flags</a></li>
+      </ul>
+    </aside>
+  </div>
+
+  <!-- Search Modal -->
+  <div class="search-modal" id="search-modal">
+    <div class="search-dialog">
+      <div class="search-input-box">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="search-input" placeholder="Type keywords to search..." autocomplete="off">
+        <kbd class="search-shortcut">ESC</kbd>
+      </div>
+      <div class="search-results" id="search-results"></div>
+    </div>
+  </div>
+
+  <script src="./assets/js/docs.js"></script>
+</body>
+</html>

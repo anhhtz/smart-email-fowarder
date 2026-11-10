@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cài đặt & Triển khai - Smart Email Forwarder</title>
+  <meta name="description" content="Hướng dẫn chi tiết từng bước triển khai Smart Email Forwarder trên Windows Server 2019 và Linux Mint trong môi trường air-gapped.">
+  <link rel="stylesheet" href="../assets/css/docs.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="docs-header">
+    <div style="display: flex; align-items: center; gap: 1rem;">
+      <button class="mobile-nav-toggle" id="mobile-nav-toggle" aria-label="Mở menu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <a href="index.html" class="brand">
+        <div class="brand-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        </div>
+        <span>Smart Email Forwarder</span>
+        <span class="brand-badge">v0.1.0</span>
+      </a>
+    </div>
+
+    <div class="header-actions">
+      <div class="lang-switch">
+        <a href="../installation.html" class="lang-btn" title="Switch to English">EN</a>
+        <span class="lang-divider">/</span>
+        <span class="lang-btn active">VI</span>
+      </div>
+      <button class="search-trigger" id="search-trigger">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span>Tìm kiếm tài liệu...</span>
+        <kbd class="search-shortcut">Ctrl K</kbd>
+      </button>
+      <button class="theme-toggle" id="theme-toggle" aria-label="Đổi giao diện">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <a href="https://github.com/anhhtca/smart-email-fowarder" target="_blank" rel="noopener noreferrer" class="theme-toggle" aria-label="Mã nguồn GitHub">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+      </a>
+    </div>
+  </header>
+
+  <!-- Layout -->
+  <div class="docs-layout">
+    <!-- Sidebar -->
+    <aside class="docs-sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-title">Bắt đầu</div>
+        <ul class="sidebar-nav">
+          <li><a href="index.html" class="sidebar-link">Tổng quan & Điểm nổi bật</a></li>
+          <li><a href="index.html#quickstart" class="sidebar-link">Bắt đầu nhanh</a></li>
+          <li><a href="architecture.html" class="sidebar-link">Kiến trúc hệ thống</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Triển khai</div>
+        <ul class="sidebar-nav">
+          <li><a href="installation.html#windows" class="sidebar-link active">Windows Server 2019</a></li>
+          <li><a href="installation.html#linux" class="sidebar-link">Linux Mint & Ubuntu</a></li>
+          <li><a href="installation.html#build" class="sidebar-link">Biên dịch từ mã nguồn</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Cấu hình</div>
+        <ul class="sidebar-nav">
+          <li><a href="configuration.html#webui" class="sidebar-link">Giao diện Web Console</a></li>
+          <li><a href="configuration.html#imap" class="sidebar-link">Cấu hình IMAP Exchange</a></li>
+          <li><a href="configuration.html#smtp" class="sidebar-link">Cấu hình SMTP Relay</a></li>
+          <li><a href="configuration.html#forwarding" class="sidebar-link">Quy tắc chuyển tiếp</a></li>
+          <li><a href="configuration.html#cli" class="sidebar-link">Tham số dòng lệnh CLI</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Vận hành & Tính năng</div>
+        <ul class="sidebar-nav">
+          <li><a href="operations.html#telemetry" class="sidebar-link">Giám sát tài nguyên (Process Monitor)</a></li>
+          <li><a href="operations.html#health" class="sidebar-link">Kiểm tra sức khỏe hệ thống con</a></li>
+          <li><a href="mailbox-explorer.html" class="sidebar-link">Trình khám phá Hộp thư</a></li>
+          <li><a href="operations.html#database" class="sidebar-link">Bảo trì cơ sở dữ liệu</a></li>
+          <li><a href="operations.html#troubleshooting" class="sidebar-link">Hướng dẫn xử lý sự cố</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Lập trình viên</div>
+        <ul class="sidebar-nav">
+          <li><a href="api.html" class="sidebar-link">Tài liệu REST API</a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="docs-content">
+      <h1>Cài đặt &amp; Triển khai</h1>
+      <p class="docs-lead">
+        Smart Email Forwarder được thiết kế để triển khai nhanh chóng trong các môi trường doanh nghiệp air-gapped: không cần cài thêm trình quản lý gói, không cài đặt runtime môi trường và không phụ thuộc thư viện ngoài.
+      </p>
+
+      <h2 id="windows">Triển khai trên Windows Server 2019 Standard</h2>
+      <p>
+        Trong các trung tâm dữ liệu cô lập, máy chủ Windows Server 2019 Standard thường bị ngắt hoàn toàn kết nối Internet. Việc triển khai chỉ đơn giản là sao chép tệp thực thi duy nhất và đăng ký dịch vụ với công cụ <code>sc.exe</code> tích hợp sẵn của Windows.
+      </p>
+
+      <h3>Bước 1: Sao chép Tệp nhị phân &amp; Kịch bản</h3>
+      <ol>
+        <li>Biên dịch <code>smart-email-forwarder.exe</code> trên máy trạm xây dựng hoặc tải từ trang Release.</li>
+        <li>Tạo một thư mục chuyên dụng trên máy chủ đích, ví dụ: <code>C:\SmartEmailForwarder</code>.</li>
+        <li>Sao chép tệp thực thi và thư mục <code>deploy\windows\</code> vào đó:</li>
+      </ol>
+
+      <pre><code class="language-text">C:\SmartEmailForwarder\
+├── smart-email-forwarder.exe
+├── data\
+└── deploy\
+    └── windows\
+        ├── install_service.bat
+        ├── uninstall_service.bat
+        └── run.bat</code></pre>
+
+      <h3>Bước 2: Cài đặt Dịch vụ Tự động</h3>
+      <p>
+        Nhấp chuột phải vào Command Prompt hoặc PowerShell, chọn <strong>"Run as administrator"</strong> và chạy lệnh:
+      </p>
+
+      <div class="code-wrapper">
+        <div class="code-header">
+          <span>CMD (ADMINISTRATOR)</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-cmd">cd C:\SmartEmailForwarder
+deploy\windows\install_service.bat</code></pre>
+      </div>
+
+      <div class="callout callout-tip">
+        <div class="callout-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          install_service.bat Thực hiện những gì?
+        </div>
+        <p>Kịch bản kiểm tra quyền Administrator, đăng ký dịch vụ <code>SmartEmailForwarder</code> qua <code>sc.exe</code>, đặt chế độ khởi động <strong>Automatic</strong> (chạy ngay khi bật máy trước khi bất kỳ ai đăng nhập), cấu hình <strong>Tự phục hồi sau sự cố</strong> (tự khởi động lại sau 5 giây nếu tiến trình dừng đột ngột), và bật dịch vụ ngay tức thì.</p>
+      </div>
+
+      <h3>Cách 2: Đăng ký Dịch vụ Thủ công qua <code>sc.exe</code></h3>
+      <p>Nếu bạn muốn kiểm soát chính xác từng câu lệnh của Windows Service Control Manager:</p>
+
+      <div class="code-wrapper">
+        <div class="code-header">
+          <span>LỆNH ĐĂNG KÝ DỊCH VỤ THỦ CÔNG</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-cmd">:: 1. Tạo dịch vụ Windows Service
+sc.exe create "SmartEmailForwarder" binPath= "\"C:\SmartEmailForwarder\smart-email-forwarder.exe\" --service" start= auto DisplayName= "Smart Email Forwarder"
+
+:: 2. Đặt mô tả cho dịch vụ
+sc.exe description "SmartEmailForwarder" "Kiem tra mailbox MS Exchange va chuyen tiep email sang Gmail qua internal Exchange relay."
+
+:: 3. Cấu hình tự khởi động lại khi crash (restart sau 5 giây)
+sc.exe failure "SmartEmailForwarder" reset= 86400 actions= restart/5000/restart/5000/restart/5000
+
+:: 4. Khởi động dịch vụ
+sc.exe start "SmartEmailForwarder"</code></pre>
+      </div>
+
+      <h3>Cấu hình Tường lửa Windows Firewall (Tùy chọn)</h3>
+      <p>Để mở quyền truy cập giao diện quản trị Web từ các máy tính khác trong mạng nội bộ công ty:</p>
+
+      <div class="code-wrapper">
+        <div class="code-header">
+          <span>POWERSHELL (ADMINISTRATOR)</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-powershell">New-NetFirewallRule -Name "SmartEmailForwarder_WebUI" `
+  -DisplayName "Smart Email Forwarder Web Console (Port 8080)" `
+  -Direction Inbound `
+  -Protocol TCP `
+  -LocalPort 8080 `
+  -Action Allow</code></pre>
+      </div>
+
+      <h2 id="linux">Triển khai trên Linux Mint &amp; Ubuntu</h2>
+      <p>Trên môi trường Linux, ứng dụng được quản lý như một dịch vụ <code>systemd</code> chuẩn của hệ điều hành.</p>
+
+      <h3>Bước 1: Cài đặt Tệp nhị phân</h3>
+      <div class="code-wrapper">
+        <div class="code-header">
+          <span>BASH</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-bash"># Tạo thư mục ứng dụng
+sudo mkdir -p /opt/smart-email-forwarder/data
+
+# Sao chép tệp nhị phân và cấp quyền thực thi
+sudo cp target/release/smart-email-forwarder /opt/smart-email-forwarder/
+sudo chmod +x /opt/smart-email-forwarder/smart-email-forwarder</code></pre>
+      </div>
+
+      <h3>Bước 2: Cấu hình Tập tin Dịch vụ Systemd</h3>
+      <p>Sao chép tệp unit mẫu từ <code>deploy/linux/email-forwarder.service</code> vào thư mục dịch vụ của hệ thống:</p>
+
+      <div class="code-wrapper">
+        <div class="code-header">
+          <span>/etc/systemd/system/email-forwarder.service</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-ini">[Unit]
+Description=Smart Email Forwarder Service
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/smart-email-forwarder
+ExecStart=/opt/smart-email-forwarder/smart-email-forwarder --port 8080 --host 0.0.0.0 --db /opt/smart-email-forwarder/data/forwarder.db
+Restart=always
+RestartSec=5s
+LimitNOFILE=65536
+Environment=RUST_LOG=smart_email_forwarder=info,tower_http=info
+
+[Install]
+WantedBy=multi-user.target</code></pre>
+      </div>
+
+      <h3>Bước 3: Kích hoạt &amp; Chạy Dịch vụ</h3>
+      <div class="code-wrapper">
+        <div class="code-header">
+          <span>BASH</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-bash"># Nạp lại cấu hình dịch vụ
+sudo systemctl daemon-reload
+
+# Kích hoạt tự chạy khi khởi động và bật dịch vụ ngay
+sudo systemctl enable --now email-forwarder.service
+
+# Kiểm tra trạng thái đang chạy
+sudo systemctl status email-forwarder.service
+
+# Xem luồng log thời gian thực
+journalctl -u email-forwarder.service -f</code></pre>
+      </div>
+
+      <h2 id="build">Biên dịch từ Mã nguồn</h2>
+      <p>Dành cho các kỹ sư muốn tự biên dịch trên máy trạm trước khi chuyển giao vào phòng máy:</p>
+
+      <h3>Yêu cầu tiên quyết</h3>
+      <ul>
+        <li><strong>Bộ công cụ Rust:</strong> Phiên bản 1.75 trở lên (cài đặt qua <code>rustup</code>).</li>
+        <li><strong>Trình biên dịch C:</strong> <code>gcc</code>/<code>clang</code> trên Linux, hoặc Visual Studio Build Tools (C++) trên Windows (để biên dịch SQLite nhúng).</li>
+        <li><strong>Thư viện OpenSSL:</strong> Header phát triển OpenSSL (hoặc SChannel trên Windows).</li>
+      </ul>
+
+      <h3>Đóng gói Offline cho Máy chủ Air-Gapped (Cargo Vendor)</h3>
+      <p>Nếu máy trạm phát triển có mạng trước khi ngắt kết nối vào môi trường cô lập, bạn có thể tải trước toàn bộ thư viện phụ thuộc:</p>
+
+      <div class="code-wrapper">
+        <div class="code-header">
+          <span>BASH</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-bash"># Tải toàn bộ thư viện dependencies về thư mục vendor/
+cargo vendor
+
+# Biên dịch hoàn toàn offline mà không cần kết nối internet
+cargo build --release --frozen --offline</code></pre>
+      </div>
+
+      <h3>Biên dịch chéo (Cross-Compile) cho Windows từ Linux</h3>
+      <pre><code class="language-bash"># Thêm kiến trúc đích cho Windows
+rustup target add x86_64-pc-windows-gnu
+
+# Cài đặt trình biên dịch mingw
+sudo apt-get install mingw-w64
+
+# Biên dịch ra file thực thi .exe
+cargo build --release --target x86_64-pc-windows-gnu</code></pre>
+
+      <div class="page-nav-footer">
+        <a href="architecture.html" class="page-nav-btn">
+          <span class="page-nav-label">Quay lại</span>
+          <span class="page-nav-title">&larr; Kiến trúc hệ thống</span>
+        </a>
+        <a href="configuration.html" class="page-nav-btn" style="text-align: right;">
+          <span class="page-nav-label">Tiếp theo</span>
+          <span class="page-nav-title">Hướng dẫn Cấu hình &rarr;</span>
+        </a>
+      </div>
+    </main>
+
+    <!-- Table of Contents -->
+    <aside class="docs-toc">
+      <div class="toc-title">Mục lục trang</div>
+      <ul class="toc-nav">
+        <li><a href="#windows">Windows Server 2019</a></li>
+        <li><a href="#linux">Linux Mint & Ubuntu</a></li>
+        <li><a href="#build">Biên dịch từ mã nguồn</a></li>
+      </ul>
+    </aside>
+  </div>
+
+  <!-- Search Modal -->
+  <div class="search-modal" id="search-modal">
+    <div class="search-dialog">
+      <div class="search-input-box">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="search-input" placeholder="Nhập từ khóa tìm kiếm..." autocomplete="off">
+        <kbd class="search-shortcut">ESC</kbd>
+      </div>
+      <div class="search-results" id="search-results"></div>
+    </div>
+  </div>
+
+  <script src="../assets/js/docs.js"></script>
+</body>
+</html>

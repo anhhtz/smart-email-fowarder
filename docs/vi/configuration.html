@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hướng dẫn Cấu hình - Smart Email Forwarder</title>
+  <meta name="description" content="Hướng dẫn chi tiết cấu hình IMAP Exchange, SMTP Relay, quy tắc chuyển tiếp và các tham số dòng lệnh CLI cho Smart Email Forwarder.">
+  <link rel="stylesheet" href="../assets/css/docs.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="docs-header">
+    <div style="display: flex; align-items: center; gap: 1rem;">
+      <button class="mobile-nav-toggle" id="mobile-nav-toggle" aria-label="Mở menu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <a href="index.html" class="brand">
+        <div class="brand-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        </div>
+        <span>Smart Email Forwarder</span>
+        <span class="brand-badge">v0.1.0</span>
+      </a>
+    </div>
+
+    <div class="header-actions">
+      <div class="lang-switch">
+        <a href="../configuration.html" class="lang-btn" title="Switch to English">EN</a>
+        <span class="lang-divider">/</span>
+        <span class="lang-btn active">VI</span>
+      </div>
+      <button class="search-trigger" id="search-trigger">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span>Tìm kiếm tài liệu...</span>
+        <kbd class="search-shortcut">Ctrl K</kbd>
+      </button>
+      <button class="theme-toggle" id="theme-toggle" aria-label="Đổi giao diện">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <a href="https://github.com/anhhtca/smart-email-fowarder" target="_blank" rel="noopener noreferrer" class="theme-toggle" aria-label="Mã nguồn GitHub">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+      </a>
+    </div>
+  </header>
+
+  <!-- Layout -->
+  <div class="docs-layout">
+    <!-- Sidebar -->
+    <aside class="docs-sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-title">Bắt đầu</div>
+        <ul class="sidebar-nav">
+          <li><a href="index.html" class="sidebar-link">Tổng quan & Điểm nổi bật</a></li>
+          <li><a href="index.html#quickstart" class="sidebar-link">Bắt đầu nhanh</a></li>
+          <li><a href="architecture.html" class="sidebar-link">Kiến trúc hệ thống</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Triển khai</div>
+        <ul class="sidebar-nav">
+          <li><a href="installation.html#windows" class="sidebar-link">Windows Server 2019</a></li>
+          <li><a href="installation.html#linux" class="sidebar-link">Linux Mint & Ubuntu</a></li>
+          <li><a href="installation.html#build" class="sidebar-link">Biên dịch từ mã nguồn</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Cấu hình</div>
+        <ul class="sidebar-nav">
+          <li><a href="configuration.html#webui" class="sidebar-link active">Giao diện Web Console</a></li>
+          <li><a href="configuration.html#imap" class="sidebar-link">Cấu hình IMAP Exchange</a></li>
+          <li><a href="configuration.html#smtp" class="sidebar-link">Cấu hình SMTP Relay</a></li>
+          <li><a href="configuration.html#forwarding" class="sidebar-link">Quy tắc chuyển tiếp</a></li>
+          <li><a href="configuration.html#cli" class="sidebar-link">Tham số dòng lệnh CLI</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Vận hành & Tính năng</div>
+        <ul class="sidebar-nav">
+          <li><a href="operations.html#telemetry" class="sidebar-link">Giám sát tài nguyên (Process Monitor)</a></li>
+          <li><a href="operations.html#health" class="sidebar-link">Kiểm tra sức khỏe hệ thống con</a></li>
+          <li><a href="mailbox-explorer.html" class="sidebar-link">Trình khám phá Hộp thư</a></li>
+          <li><a href="operations.html#database" class="sidebar-link">Bảo trì cơ sở dữ liệu</a></li>
+          <li><a href="operations.html#troubleshooting" class="sidebar-link">Hướng dẫn xử lý sự cố</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Lập trình viên</div>
+        <ul class="sidebar-nav">
+          <li><a href="api.html" class="sidebar-link">Tài liệu REST API</a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="docs-content">
+      <h1>Hướng dẫn Cấu hình</h1>
+      <p class="docs-lead">
+        Tìm hiểu cách thiết lập Smart Email Forwarder dễ dàng thông qua Giao diện Quản trị Web trực quan hoặc qua các tham số dòng lệnh khi khởi chạy.
+      </p>
+
+      <h2 id="webui">Giao diện Quản trị Web (Web Console)</h2>
+      <p>
+        Ứng dụng tích hợp sẵn toàn bộ trang quản trị bên trong tệp nhị phân thực thi. Người quản trị có thể truy cập bằng trình duyệt tại máy chủ qua địa chỉ <a href="http://localhost:8080" target="_blank"><code>http://localhost:8080</code></a> (hoặc <code>http://&lt;IP-may-chu&gt;:8080</code> từ máy tính khác trong mạng nội bộ).
+      </p>
+
+      <p>Bảng điều khiển được chia thành 6 tab chức năng mạch lạc:</p>
+      <ul>
+        <li><strong>Dashboard (Tổng quan):</strong> Thống kê trạng thái (Đang chạy / Tạm dừng / Đang quét), tổng số email đã chuyển tiếp, số email thất bại, đếm ngược chu kỳ quét tiếp theo, nút kích hoạt "Đồng bộ ngay", và bảng lịch sử email gần nhất.</li>
+        <li><strong>Process Monitor (Giám sát Tiến trình):</strong> Thông số hệ điều hành thời gian thực: PID/PPID, tiêu thụ bộ nhớ RAM (RSS, VmPeak), tải CPU, số lượng luồng thực thi OS và công cụ chẩn đoán sức khỏe hệ thống con.</li>
+        <li><strong>Exchange Mailbox (Hộp thư Exchange):</strong> Thiết lập kết nối đọc hòm thư công ty qua giao thức IMAP.</li>
+        <li><strong>Forwarding Rules (Quy tắc Chuyển tiếp):</strong> Thiết lập danh sách Gmail nhận thư, tiền tố tiêu đề, tần suất quét và cấu hình bảo toàn Reply-To.</li>
+        <li><strong>Exchange SMTP Relay:</strong> Thiết lập cổng chuyển tiếp thư thông qua connector nội bộ của Exchange.</li>
+        <li><strong>Activity Logs (Nhật ký Hoạt động):</strong> Xem luồng log chi tiết theo thời gian thực để theo dõi hoạt động và phát hiện lỗi.</li>
+      </ul>
+
+      <h2 id="imap">Cấu hình Hòm thư Exchange (IMAP)</h2>
+      <p>
+        Các thông số này chỉ định cách ứng dụng kết nối và đọc thư từ máy chủ Microsoft Exchange nội bộ.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Trường thiết lập</th>
+              <th>Ví dụ mẫu</th>
+              <th>Ý nghĩa &amp; Chú thích</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Exchange Host / IP</strong></td>
+              <td><code>mail.corp.local</code> hoặc <code>192.168.1.10</code></td>
+              <td>Tên miền FQDN hoặc địa chỉ IP của máy chủ Exchange trong mạng LAN.</td>
+            </tr>
+            <tr>
+              <td><strong>Cổng (Port)</strong></td>
+              <td><code>993</code> hoặc <code>143</code></td>
+              <td>Cổng <code>993</code> cho kết nối SSL/TLS trực tiếp; cổng <code>143</code> cho STARTTLS hoặc Plaintext.</td>
+            </tr>
+            <tr>
+              <td><strong>Phương thức Mã hóa</strong></td>
+              <td><code>SSL/TLS</code></td>
+              <td>Lựa chọn giữa <code>SSL/TLS</code> (ngầm định), <code>STARTTLS</code> hoặc <code>Plain</code> (không mã hóa).</td>
+            </tr>
+            <tr>
+              <td><strong>Tên đăng nhập (Username)</strong></td>
+              <td><code>CORP\user</code> hoặc <code>user@corp.local</code></td>
+              <td>Tài khoản Active Directory hoặc địa chỉ email nội bộ của hòm thư cần theo dõi.</td>
+            </tr>
+            <tr>
+              <td><strong>Mật khẩu (Password)</strong></td>
+              <td><code>••••••••</code></td>
+              <td>Mật khẩu tài khoản hòm thư. Được lưu an toàn trong SQLite và luôn che giấu trên UI/API.</td>
+            </tr>
+            <tr>
+              <td><strong>Thư mục Hòm thư</strong></td>
+              <td><code>INBOX</code></td>
+              <td>Thư mục IMAP cần kiểm tra thư mới (mặc định là <code>INBOX</code>).</td>
+            </tr>
+            <tr>
+              <td><strong>Đánh dấu đã đọc</strong></td>
+              <td>Bật (Checked)</td>
+              <td>Tự động gán cờ <code>\Seen</code> trên Exchange sau khi đã chuyển tiếp thư thành công.</td>
+            </tr>
+            <tr>
+              <td><strong>Chấp nhận Chứng chỉ Tự ký</strong></td>
+              <td>Bật (Checked)</td>
+              <td>Tin cậy chứng chỉ của Root CA nội bộ doanh nghiệp hoặc chứng chỉ SSL tự sinh trên Exchange.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout callout-tip">
+        <div class="callout-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          Nút Kiểm tra Kết nối Tức thời
+        </div>
+        <p>Trước khi lưu cấu hình, bạn có thể nhấn nút <strong>"Test Exchange Connection"</strong>. Ứng dụng sẽ thực hiện bắt tay mạng, đăng nhập thử và kiểm tra quyền truy cập thư mục ngay trong 1-2 giây.</p>
+      </div>
+
+      <h2 id="smtp">Cấu hình Exchange SMTP Relay</h2>
+      <p>
+        Thay vì kết nối trực tiếp ra máy chủ Google qua Internet, ứng dụng chuyển tiếp thư cho chính máy chủ Exchange nội bộ thông qua cổng SMTP Receive Connector để Exchange phụ trách định tuyến ra Internet.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Trường thiết lập</th>
+              <th>Ví dụ mẫu</th>
+              <th>Ý nghĩa &amp; Chú thích</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Relay Host</strong></td>
+              <td><code>mail.corp.local</code></td>
+              <td>Tên miền hoặc IP của máy chủ Exchange nội bộ.</td>
+            </tr>
+            <tr>
+              <td><strong>Cổng (Port)</strong></td>
+              <td><code>25</code> (mặc định nội bộ) hoặc <code>587</code></td>
+              <td>Cổng <code>25</code> là chuẩn cho relay nội bộ không cần đăng nhập; cổng <code>587</code> cho STARTTLS có xác thực.</td>
+            </tr>
+            <tr>
+              <td><strong>Địa chỉ Email Gửi (From)</strong></td>
+              <td><code>forwarder@corp.local</code></td>
+              <td>Địa chỉ email được phân quyền gửi qua connector của Exchange.</td>
+            </tr>
+            <tr>
+              <td><strong>Tên hiển thị (From Name)</strong></td>
+              <td><code>Exchange Relay</code></td>
+              <td>Tên người gửi xuất hiện trên giao diện hòm thư người nhận.</td>
+            </tr>
+            <tr>
+              <td><strong>Yêu cầu Xác thực</strong></td>
+              <td>Tắt (với cổng 25) / Bật</td>
+              <td>Bật lên nếu connector của Exchange bắt buộc phải đăng nhập tài khoản domain.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout callout-info">
+        <div class="callout-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          Lưu ý cấu hình Receive Connector trên Exchange
+        </div>
+        <p>Trong trang quản trị Exchange Admin Center (EAC) &rarr; <strong>Mail Flow &rarr; Receive Connectors</strong>, hãy đảm bảo địa chỉ IP của máy chủ cài Smart Email Forwarder đã được thêm vào danh sách Remote IP của connector nội bộ với nhóm quyền <code>Anonymous users</code> hoặc <code>Exchange servers</code>.</p>
+      </div>
+
+      <h2 id="forwarding">Quy tắc Chuyển tiếp</h2>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Tùy chọn</th>
+              <th>Mặc định</th>
+              <th>Ý nghĩa &amp; Chú thích</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Danh sách Gmail nhận</strong></td>
+              <td><em>Bắt buộc</em></td>
+              <td>Một hoặc nhiều địa chỉ email nhận (ví dụ: <code>user@gmail.com, ops@gmail.com</code>). Phân tách bằng dấu phẩy hoặc xuống dòng.</td>
+            </tr>
+            <tr>
+              <td><strong>Tiền tố Tiêu đề</strong></td>
+              <td><code>[Exchange-Fwd] </code></td>
+              <td>Thêm tiền tố vào đầu tiêu đề thư để người dùng dễ dàng tạo bộ lọc nhãn trên Gmail.</td>
+            </tr>
+            <tr>
+              <td><strong>Chu kỳ Quét</strong></td>
+              <td><code>1</code> (phút)</td>
+              <td>Khoảng thời gian giữa các lần tự động kiểm tra thư mới. Hỗ trợ từ 1 đến 1440 phút.</td>
+            </tr>
+            <tr>
+              <td><strong>Banner Chuyển tiếp</strong></td>
+              <td>Bật</td>
+              <td>Chèn khung thông báo tóm tắt thông tin người gửi gốc, thời gian và người nhận vào đầu nội dung email.</td>
+            </tr>
+            <tr>
+              <td><strong>Bảo toàn Reply-To</strong></td>
+              <td>Bật</td>
+              <td>Gán người gửi gốc vào tiêu đề <code>Reply-To</code> để khi nhấn Trả lời trên Gmail sẽ tự động gửi tới người gửi ban đầu.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 id="cli">Tham số Dòng lệnh CLI</h2>
+      <p>Cú pháp khởi chạy tệp nhị phân từ Terminal hoặc kịch bản tự động:</p>
+
+      <pre><code class="language-bash">smart-email-forwarder [TÙY CHỌN]</code></pre>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Tham số</th>
+              <th>Kiểu</th>
+              <th>Mặc định</th>
+              <th>Ý nghĩa</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>-p, --port</code></td>
+              <td>Số nguyên</td>
+              <td><code>8080</code></td>
+              <td>Cổng mạng mở cho Giao diện Web và REST API.</td>
+            </tr>
+            <tr>
+              <td><code>--host</code></td>
+              <td>Chuỗi</td>
+              <td><code>0.0.0.0</code></td>
+              <td>Địa chỉ IP lắng nghe (<code>127.0.0.1</code> chỉ cho máy cục bộ, <code>0.0.0.0</code> cho toàn mạng).</td>
+            </tr>
+            <tr>
+              <td><code>--db</code></td>
+              <td>Đường dẫn</td>
+              <td><code>data/forwarder.db</code></td>
+              <td>Đường dẫn tới tệp cơ sở dữ liệu SQLite. Tự động tạo thư mục cha nếu chưa có.</td>
+            </tr>
+            <tr>
+              <td><code>--service</code></td>
+              <td>Cờ bật/tắt</td>
+              <td><code>false</code></td>
+              <td>Cờ báo hiệu đang chạy dưới dạng dịch vụ hệ thống Windows Service.</td>
+            </tr>
+            <tr>
+              <td><code>-h, --help</code></td>
+              <td>Cờ bật/tắt</td>
+              <td>-</td>
+              <td>In thông tin hướng dẫn sử dụng dòng lệnh.</td>
+            </tr>
+            <tr>
+              <td><code>-V, --version</code></td>
+              <td>Cờ bật/tắt</td>
+              <td>-</td>
+              <td>In số hiệu phiên bản của phần mềm.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="page-nav-footer">
+        <a href="installation.html" class="page-nav-btn">
+          <span class="page-nav-label">Quay lại</span>
+          <span class="page-nav-title">&larr; Cài đặt & Triển khai</span>
+        </a>
+        <a href="operations.html" class="page-nav-btn" style="text-align: right;">
+          <span class="page-nav-label">Tiếp theo</span>
+          <span class="page-nav-title">Vận hành & Giám sát &rarr;</span>
+        </a>
+      </div>
+    </main>
+
+    <!-- Table of Contents -->
+    <aside class="docs-toc">
+      <div class="toc-title">Mục lục trang</div>
+      <ul class="toc-nav">
+        <li><a href="#webui">Giao diện Web Console</a></li>
+        <li><a href="#imap">Cấu hình IMAP Exchange</a></li>
+        <li><a href="#smtp">Cấu hình SMTP Relay</a></li>
+        <li><a href="#forwarding">Quy tắc chuyển tiếp</a></li>
+        <li><a href="#cli">Tham số dòng lệnh CLI</a></li>
+      </ul>
+    </aside>
+  </div>
+
+  <!-- Search Modal -->
+  <div class="search-modal" id="search-modal">
+    <div class="search-dialog">
+      <div class="search-input-box">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="search-input" placeholder="Nhập từ khóa tìm kiếm..." autocomplete="off">
+        <kbd class="search-shortcut">ESC</kbd>
+      </div>
+      <div class="search-results" id="search-results"></div>
+    </div>
+  </div>
+
+  <script src="../assets/js/docs.js"></script>
+</body>
+</html>

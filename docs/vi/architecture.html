@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kiến trúc hệ thống - Smart Email Forwarder</title>
+  <meta name="description" content="Thiết kế kiến trúc chuyên sâu, luồng xử lý email, pipeline MIME và mô hình bảo mật của Smart Email Forwarder.">
+  <link rel="stylesheet" href="../assets/css/docs.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="docs-header">
+    <div style="display: flex; align-items: center; gap: 1rem;">
+      <button class="mobile-nav-toggle" id="mobile-nav-toggle" aria-label="Mở menu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <a href="index.html" class="brand">
+        <div class="brand-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        </div>
+        <span>Smart Email Forwarder</span>
+        <span class="brand-badge">v0.1.0</span>
+      </a>
+    </div>
+
+    <div class="header-actions">
+      <div class="lang-switch">
+        <a href="../architecture.html" class="lang-btn" title="Switch to English">EN</a>
+        <span class="lang-divider">/</span>
+        <span class="lang-btn active">VI</span>
+      </div>
+      <button class="search-trigger" id="search-trigger">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span>Tìm kiếm tài liệu...</span>
+        <kbd class="search-shortcut">Ctrl K</kbd>
+      </button>
+      <button class="theme-toggle" id="theme-toggle" aria-label="Đổi giao diện">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <a href="https://github.com/anhhtca/smart-email-fowarder" target="_blank" rel="noopener noreferrer" class="theme-toggle" aria-label="Mã nguồn GitHub">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+      </a>
+    </div>
+  </header>
+
+  <!-- Layout -->
+  <div class="docs-layout">
+    <!-- Sidebar -->
+    <aside class="docs-sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-title">Bắt đầu</div>
+        <ul class="sidebar-nav">
+          <li><a href="index.html" class="sidebar-link">Tổng quan & Điểm nổi bật</a></li>
+          <li><a href="index.html#quickstart" class="sidebar-link">Bắt đầu nhanh</a></li>
+          <li><a href="architecture.html" class="sidebar-link active">Kiến trúc hệ thống</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Triển khai</div>
+        <ul class="sidebar-nav">
+          <li><a href="installation.html#windows" class="sidebar-link">Windows Server 2019</a></li>
+          <li><a href="installation.html#linux" class="sidebar-link">Linux Mint & Ubuntu</a></li>
+          <li><a href="installation.html#build" class="sidebar-link">Biên dịch từ mã nguồn</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Cấu hình</div>
+        <ul class="sidebar-nav">
+          <li><a href="configuration.html#webui" class="sidebar-link">Giao diện Web Console</a></li>
+          <li><a href="configuration.html#imap" class="sidebar-link">Cấu hình IMAP Exchange</a></li>
+          <li><a href="configuration.html#smtp" class="sidebar-link">Cấu hình SMTP Relay</a></li>
+          <li><a href="configuration.html#forwarding" class="sidebar-link">Quy tắc chuyển tiếp</a></li>
+          <li><a href="configuration.html#cli" class="sidebar-link">Tham số dòng lệnh CLI</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Vận hành & Tính năng</div>
+        <ul class="sidebar-nav">
+          <li><a href="operations.html#telemetry" class="sidebar-link">Giám sát tài nguyên (Process Monitor)</a></li>
+          <li><a href="operations.html#health" class="sidebar-link">Kiểm tra sức khỏe hệ thống con</a></li>
+          <li><a href="mailbox-explorer.html" class="sidebar-link">Trình khám phá Hộp thư</a></li>
+          <li><a href="operations.html#database" class="sidebar-link">Bảo trì cơ sở dữ liệu</a></li>
+          <li><a href="operations.html#troubleshooting" class="sidebar-link">Hướng dẫn xử lý sự cố</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Lập trình viên</div>
+        <ul class="sidebar-nav">
+          <li><a href="api.html" class="sidebar-link">Tài liệu REST API</a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="docs-content">
+      <h1>Kiến trúc Hệ thống</h1>
+      <p class="docs-lead">
+        Smart Email Forwarder được thiết kế theo mô hình kiến trúc module hóa, ưu tiên tuyệt đối tính tự chủ trong môi trường air-gapped, cơ chế chống trùng lặp email nghiêm ngặt và không phụ thuộc vào bất kỳ runtime bên ngoài nào.
+      </p>
+
+      <h2 id="topology">Mô hình Mạng &amp; Cô lập Mạng LAN</h2>
+      <p>
+        Trong các doanh nghiệp có tiêu chuẩn an ninh cao, hệ thống email nội bộ thường nằm trong các phân vùng mạng (VLAN) bị cô lập, nghiêm cấm các máy chủ thành viên kết nối ra ngoài Internet công cộng. Smart Email Forwarder giải quyết bài toán này bằng cách đóng vai trò là một client nội bộ, thực hiện cầu nối giữa IMAP và SMTP hoàn toàn thông qua máy chủ Microsoft Exchange nội hạt:
+      </p>
+
+      <div class="diagram-box">
+        <svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" style="font-family: var(--font-sans);">
+          <!-- Corporate Perimeter -->
+          <rect x="20" y="20" width="480" height="260" rx="10" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="6,4"/>
+          <text x="35" y="44" font-size="12" font-weight="700" fill="#475569">MẠNG NỘI BỘ DOANH NGHIỆP AIR-GAPPED</text>
+
+          <!-- Host Machine -->
+          <rect x="40" y="65" width="200" height="200" rx="8" fill="#ffffff" stroke="#1d4ed8" stroke-width="2"/>
+          <text x="55" y="92" font-size="13" font-weight="700" fill="#1d4ed8">Máy chủ Cài đặt</text>
+          <text x="55" y="110" font-size="10" fill="#64748b">Windows Server / Linux Mint</text>
+
+          <rect x="55" y="125" width="170" height="35" rx="4" fill="#eff6ff" stroke="#bfdbfe"/>
+          <text x="65" y="147" font-size="11" font-weight="600" fill="#1e40af">Smart Email Forwarder</text>
+
+          <rect x="55" y="170" width="170" height="35" rx="4" fill="#f1f5f9" stroke="#cbd5e1"/>
+          <text x="65" y="192" font-size="11" font-weight="600" fill="#334155">Cơ sở dữ liệu forwarder.db</text>
+
+          <rect x="55" y="215" width="170" height="35" rx="4" fill="#ecfdf5" stroke="#a7f3d0"/>
+          <text x="65" y="237" font-size="11" font-weight="600" fill="#065f46">Web Console (:8080)</text>
+
+          <!-- Exchange Server -->
+          <rect x="280" y="65" width="200" height="200" rx="8" fill="#1e293b" stroke="#0f172a" stroke-width="2"/>
+          <text x="295" y="92" font-size="13" font-weight="700" fill="#f8fafc">Máy chủ MS Exchange</text>
+          <text x="295" y="110" font-size="10" fill="#94a3b8">Mailbox & Hub Transport nội bộ</text>
+
+          <rect x="295" y="125" width="170" height="35" rx="4" fill="#334155"/>
+          <text x="305" y="147" font-size="11" fill="#f1f5f9">Dịch vụ IMAP (:993 / :143)</text>
+
+          <rect x="295" y="170" width="170" height="35" rx="4" fill="#334155"/>
+          <text x="305" y="192" font-size="11" fill="#f1f5f9">SMTP Receive (:25 / :587)</text>
+
+          <rect x="295" y="215" width="170" height="35" rx="4" fill="#0284c7"/>
+          <text x="305" y="237" font-size="11" font-weight="600" fill="#ffffff">Exchange Outbound Connector</text>
+
+          <!-- Internet / Gmail -->
+          <rect x="540" y="65" width="190" height="200" rx="8" fill="#ffffff" stroke="#10b981" stroke-width="2"/>
+          <text x="560" y="92" font-size="13" font-weight="700" fill="#047857">Internet Công cộng</text>
+          <text x="560" y="110" font-size="10" fill="#64748b">Hộp thư Gmail bên ngoài</text>
+          
+          <rect x="560" y="135" width="150" height="40" rx="6" fill="#f0fdf4" stroke="#a7f3d0"/>
+          <text x="575" y="160" font-size="12" font-weight="600" fill="#065f46">user@gmail.com</text>
+
+          <rect x="560" y="190" width="150" height="40" rx="6" fill="#f0fdf4" stroke="#a7f3d0"/>
+          <text x="575" y="215" font-size="12" font-weight="600" fill="#065f46">ops-team@gmail.com</text>
+
+          <!-- Flow Connections -->
+          <path d="M 225 142 L 295 142" stroke="#0284c7" stroke-width="2"/>
+          <path d="M 225 187 L 295 187" stroke="#10b981" stroke-width="2"/>
+          <path d="M 480 232 L 540 232" stroke="#f59e0b" stroke-width="2.5" stroke-dasharray="4,4"/>
+        </svg>
+        <div class="diagram-caption">Hình 2.1: Phân tách trách nhiệm kết nối mạng. Chỉ có máy chủ Exchange nắm giữ cổng gửi thư ra Internet.</div>
+      </div>
+
+      <h2 id="lifecycle">Vòng đời Xử lý Email từ Đầu đến Cuối</h2>
+      <p>Trong mỗi chu kỳ quét tự động (hoặc khi người dùng nhấn nút "Đồng bộ ngay"), ứng dụng thực thi chuỗi 7 bước tuần tự:</p>
+
+      <ol>
+        <li>
+          <strong>Khởi tạo Phiên IMAP:</strong> Thiết lập kết nối mã hóa TLS hoặc STARTTLS tới cổng IMAP của Exchange. Nếu được cấu hình tin cậy chứng chỉ nội bộ, OpenSSL sẽ chấp nhận chứng chỉ do CA nội bộ của doanh nghiệp cấp.
+        </li>
+        <li>
+          <strong>Chọn thư mục &amp; Tìm kiếm thư:</strong> Mở thư mục đích (mặc định: <code>INBOX</code>) và truy vấn danh sách thư mới/chưa đọc.
+        </li>
+        <li>
+          <strong>Kiểm tra chống trùng lặp (Deduplication):</strong> Với mỗi email tìm thấy, ứng dụng trích xuất tiêu đề <code>Message-ID</code> chuẩn RFC822 và đối soát với bảng <code>processed_emails</code> trong SQLite. Nếu ID đã tồn tại, email sẽ được bỏ qua ngay lập tức mà không cần tải nội dung.
+        </li>
+        <li>
+          <strong>Tải &amp; Phân tích cấu trúc MIME:</strong> Với email mới, toàn bộ payload RFC822 được tải về và phân tách bằng <code>mail-parser</code>. Nội dung Rich HTML, Plain Text, ảnh nội dòng (inline images) và tất cả tệp đính kèm được tái tạo nguyên vẹn.
+        </li>
+        <li>
+          <strong>Chèn Tiêu đề &amp; Biển báo Chuyển tiếp:</strong> 
+          <ul>
+            <li>Người gửi ban đầu được thiết lập vào tiêu đề <code>Reply-To</code> để khi người nhận bấm "Trả lời" trên Gmail, thư phản hồi sẽ gửi thẳng tới tác giả gốc.</li>
+            <li>Gắn tiền tố tiêu đề tùy chọn (ví dụ: <code>[Exchange-Fwd] </code>).</li>
+            <li>Chèn banner tóm tắt thông tin chuyển tiếp vào đầu nội dung email.</li>
+          </ul>
+        </li>
+        <li>
+          <strong>Gửi tiếp vận qua Exchange SMTP Relay:</strong> Tạo cấu trúc MIME RFC5322 hoàn chỉnh bằng <code>lettre</code> với đầy đủ tệp đính kèm, sau đó gửi tới SMTP Relay của Exchange để máy chủ này chuyển phát tới danh sách Gmail đích.
+        </li>
+        <li>
+          <strong>Lưu vết Trạng thái &amp; Đánh dấu đã đọc:</strong> Sau khi nhận phản hồi xác nhận thành công từ SMTP, <code>Message-ID</code>, người gửi, tiêu đề và thời gian được ghi vào SQLite. Nếu tùy chọn "Đánh dấu đã đọc" được bật, cờ <code>\Seen</code> sẽ được gán cho email trên Exchange.
+        </li>
+      </ol>
+
+      <h2 id="mime-pipeline">Pipeline Phân tích MIME &amp; Tệp đính kèm</h2>
+      <p>
+        Bảo toàn độ chân thực của email là yêu cầu tối quan trọng trong môi trường doanh nghiệp. Các email công việc thường chứa chữ ký HTML phức tạp, bảng tính Excel, hóa đơn PDF có chữ ký số và tệp nén.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Phần tử MIME</th>
+              <th>Phương thức xử lý</th>
+              <th>Cam kết bảo toàn</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Rich HTML</strong></td>
+              <td>Giữ nguyên cây DOM và chèn banner vào đầu thẻ <code>&lt;body&gt;</code>.</td>
+              <td>Giữ nguyên 100% định dạng, phông chữ, liên kết và bảng biểu.</td>
+            </tr>
+            <tr>
+              <td><strong>Plain Text</strong></td>
+              <td>Chuẩn hóa UTF-8 kèm thông tin chuyển tiếp dạng văn bản thuần.</td>
+              <td>Giữ nguyên các dấu xuống dòng và thụt lề.</td>
+            </tr>
+            <tr>
+              <td><strong>Ảnh nội dòng (CID)</strong></td>
+              <td>Duy trì chính xác mã <code>Content-ID</code> ban đầu.</td>
+              <td>Ảnh hiển thị đúng vị trí trong nội dung thư, không bị biến thành tệp đính kèm rời.</td>
+            </tr>
+            <tr>
+              <td><strong>Tệp đính kèm nhị phân</strong></td>
+              <td>Trích xuất byte thô, giữ nguyên tên tệp và MIME content-type.</td>
+              <td>Không làm thay đổi hash, không bị hỏng tệp hay sai mã hóa.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 id="sqlite">Cơ chế Deduplication bằng SQLite</h2>
+      <p>
+        Cơ sở dữ liệu SQLite chạy ở chế độ nhúng (embedded) thông qua <code>rusqlite(bundled)</code> với cơ chế ghi <strong>Write-Ahead Logging (WAL)</strong> cho phép đọc ghi đồng thời mà không bị khóa bảng.
+      </p>
+
+      <div class="code-wrapper">
+        <div class="code-header">
+          <span>CẤU TRÚC BẢNG DEDUPLICATION</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-sql">CREATE TABLE IF NOT EXISTS processed_emails (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    message_id TEXT NOT NULL UNIQUE,
+    subject TEXT,
+    sender TEXT,
+    recipient TEXT,
+    processed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    status TEXT NOT NULL,
+    error_message TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_processed_emails_message_id 
+ON processed_emails (message_id);</code></pre>
+      </div>
+
+      <div class="callout callout-tip">
+        <div class="callout-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          Truy vấn Deduplication Tốc độ Cao
+        </div>
+        <p>Nhờ chỉ mục B-tree trên cột <code>message_id</code>, thao tác kiểm tra trùng lặp chỉ mất dưới 1 mili-giây với độ phức tạp O(log n), ngay cả khi cơ sở dữ liệu đã lưu trữ hàng triệu bản ghi sau nhiều năm hoạt động.</p>
+      </div>
+
+      <h2 id="security">Bảo mật &amp; Tuân thủ Air-Gapped</h2>
+      <ul>
+        <li><strong>Không gửi Telemetry:</strong> Tuyệt đối không gửi bất kỳ dữ liệu phân tích, đo kiểm hay kiểm tra bản quyền nào ra ngoài.</li>
+        <li><strong>Bảo vệ mật khẩu:</strong> Mật khẩu lưu trong SQLite được che (<code>••••••••</code>) trong toàn bộ phản hồi REST API và giao diện Web.</li>
+        <li><strong>An toàn bộ nhớ:</strong> Viết 100% bằng Rust, loại bỏ hoàn toàn các lỗi tràn bộ đệm (buffer overflow), con trỏ rác hay rò rỉ tài nguyên trong quá trình chạy 24/7.</li>
+        <li><strong>Quản lý phiên làm việc:</strong> Giao diện Web được bảo vệ bằng session token có thời hạn và kiểm tra nguồn gốc nghiêm ngặt.</li>
+      </ul>
+
+      <div class="page-nav-footer">
+        <a href="index.html" class="page-nav-btn">
+          <span class="page-nav-label">Quay lại</span>
+          <span class="page-nav-title">&larr; Tổng quan & Điểm nổi bật</span>
+        </a>
+        <a href="installation.html" class="page-nav-btn" style="text-align: right;">
+          <span class="page-nav-label">Tiếp theo</span>
+          <span class="page-nav-title">Cài đặt & Triển khai &rarr;</span>
+        </a>
+      </div>
+    </main>
+
+    <!-- Table of Contents -->
+    <aside class="docs-toc">
+      <div class="toc-title">Mục lục trang</div>
+      <ul class="toc-nav">
+        <li><a href="#topology">Mô hình mạng LAN</a></li>
+        <li><a href="#lifecycle">Vòng đời xử lý email</a></li>
+        <li><a href="#mime-pipeline">Pipeline MIME & Tệp đính kèm</a></li>
+        <li><a href="#sqlite">Deduplication bằng SQLite</a></li>
+        <li><a href="#security">Bảo mật & Tuân thủ</a></li>
+      </ul>
+    </aside>
+  </div>
+
+  <!-- Search Modal -->
+  <div class="search-modal" id="search-modal">
+    <div class="search-dialog">
+      <div class="search-input-box">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="search-input" placeholder="Nhập từ khóa tìm kiếm..." autocomplete="off">
+        <kbd class="search-shortcut">ESC</kbd>
+      </div>
+      <div class="search-results" id="search-results"></div>
+    </div>
+  </div>
+
+  <script src="../assets/js/docs.js"></script>
+</body>
+</html>

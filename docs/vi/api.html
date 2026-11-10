@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tài liệu REST API - Smart Email Forwarder</title>
+  <meta name="description" content="Tài liệu đặc tả kỹ thuật toàn bộ REST API của Smart Email Forwarder: đo kiểm tiến trình, quản lý cấu hình, điều khiển poller và duyệt hòm thư.">
+  <link rel="stylesheet" href="../assets/css/docs.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="docs-header">
+    <div style="display: flex; align-items: center; gap: 1rem;">
+      <button class="mobile-nav-toggle" id="mobile-nav-toggle" aria-label="Mở menu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <a href="index.html" class="brand">
+        <div class="brand-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        </div>
+        <span>Smart Email Forwarder</span>
+        <span class="brand-badge">v0.1.0</span>
+      </a>
+    </div>
+
+    <div class="header-actions">
+      <div class="lang-switch">
+        <a href="../api.html" class="lang-btn" title="Switch to English">EN</a>
+        <span class="lang-divider">/</span>
+        <span class="lang-btn active">VI</span>
+      </div>
+      <button class="search-trigger" id="search-trigger">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span>Tìm kiếm tài liệu...</span>
+        <kbd class="search-shortcut">Ctrl K</kbd>
+      </button>
+      <button class="theme-toggle" id="theme-toggle" aria-label="Đổi giao diện">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <a href="https://github.com/anhhtca/smart-email-fowarder" target="_blank" rel="noopener noreferrer" class="theme-toggle" aria-label="Mã nguồn GitHub">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+      </a>
+    </div>
+  </header>
+
+  <!-- Layout -->
+  <div class="docs-layout">
+    <!-- Sidebar -->
+    <aside class="docs-sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-title">Bắt đầu</div>
+        <ul class="sidebar-nav">
+          <li><a href="index.html" class="sidebar-link">Tổng quan & Điểm nổi bật</a></li>
+          <li><a href="index.html#quickstart" class="sidebar-link">Bắt đầu nhanh</a></li>
+          <li><a href="architecture.html" class="sidebar-link">Kiến trúc hệ thống</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Triển khai</div>
+        <ul class="sidebar-nav">
+          <li><a href="installation.html#windows" class="sidebar-link">Windows Server 2019</a></li>
+          <li><a href="installation.html#linux" class="sidebar-link">Linux Mint & Ubuntu</a></li>
+          <li><a href="installation.html#build" class="sidebar-link">Biên dịch từ mã nguồn</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Cấu hình</div>
+        <ul class="sidebar-nav">
+          <li><a href="configuration.html#webui" class="sidebar-link">Giao diện Web Console</a></li>
+          <li><a href="configuration.html#imap" class="sidebar-link">Cấu hình IMAP Exchange</a></li>
+          <li><a href="configuration.html#smtp" class="sidebar-link">Cấu hình SMTP Relay</a></li>
+          <li><a href="configuration.html#forwarding" class="sidebar-link">Quy tắc chuyển tiếp</a></li>
+          <li><a href="configuration.html#cli" class="sidebar-link">Tham số dòng lệnh CLI</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Vận hành & Tính năng</div>
+        <ul class="sidebar-nav">
+          <li><a href="operations.html#telemetry" class="sidebar-link">Giám sát tài nguyên (Process Monitor)</a></li>
+          <li><a href="operations.html#health" class="sidebar-link">Kiểm tra sức khỏe hệ thống con</a></li>
+          <li><a href="mailbox-explorer.html" class="sidebar-link">Trình khám phá Hộp thư</a></li>
+          <li><a href="operations.html#database" class="sidebar-link">Bảo trì cơ sở dữ liệu</a></li>
+          <li><a href="operations.html#troubleshooting" class="sidebar-link">Hướng dẫn xử lý sự cố</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Lập trình viên</div>
+        <ul class="sidebar-nav">
+          <li><a href="api.html" class="sidebar-link active">Tài liệu REST API</a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="docs-content">
+      <h1>Tài liệu REST API</h1>
+      <p class="docs-lead">
+        Smart Email Forwarder cung cấp hệ thống REST API nội bộ phục vụ giao diện Web và hỗ trợ tích hợp với các công cụ tự động hóa, giám sát hạ tầng ngoài.
+      </p>
+
+      <div class="callout callout-info">
+        <div class="callout-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          Đường dẫn Cơ sở (Base URL) &amp; Xác thực
+        </div>
+        <p>Base URL: <code>http://localhost:8080/api</code>. Khi tính năng xác thực được kích hoạt, bạn truyền token qua tiêu đề <code>Authorization: Bearer &lt;TOKEN&gt;</code>, tiêu đề <code>X-Auth-Token: &lt;TOKEN&gt;</code>, hoặc qua HTTP cookie <code>auth_token</code>.</p>
+      </div>
+
+      <h2 id="status-api">1. Trạng thái Dịch vụ &amp; Đo kiểm Tiến trình</h2>
+
+      <h3>GET /api/status</h3>
+      <p>Trả về trạng thái hoạt động tổng quát, số lượng email đã xử lý, thời gian đồng bộ và danh sách email gần nhất.</p>
+      <div class="code-wrapper">
+        <div class="code-header">
+          <span>PHẢN HỒI (200 OK)</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-json">{
+  "is_running": true,
+  "is_paused": false,
+  "is_syncing": false,
+  "total_forwarded": 1420,
+  "failed_forwarded": 2,
+  "last_sync": "2026-11-09T14:30:00Z",
+  "next_sync_seconds": 45,
+  "recent_emails": [
+    {
+      "id": 1420,
+      "message_id": "<202611091430.xyz@company.com>",
+      "subject": "Báo cáo Tài chính Q4",
+      "sender": "finance@company.com",
+      "recipient": "user@gmail.com",
+      "processed_at": "2026-11-09T14:30:05Z",
+      "status": "success",
+      "error_message": null
+    }
+  ]
+}</code></pre>
+      </div>
+
+      <h3>GET /api/process</h3>
+      <p>Trả về các chỉ số cấp kernel của tiến trình đang chạy: PID, bộ nhớ RAM thực tế (RSS), kích thước bộ nhớ ảo, số core CPU, số luồng thực thi và tình trạng cơ sở dữ liệu.</p>
+      <div class="code-wrapper">
+        <div class="code-header">
+          <span>PHẢN HỒI (200 OK)</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-json">{
+  "pid": 18240,
+  "ppid": 1,
+  "execution_mode": "Windows Service",
+  "uptime_seconds": 86450,
+  "memory": {
+    "rss_bytes": 22450176,
+    "vmsize_bytes": 104857600,
+    "vmpeak_bytes": 115343360
+  },
+  "cpu": {
+    "cores": 8,
+    "load_avg_1m": 0.12,
+    "load_avg_5m": 0.08,
+    "load_avg_15m": 0.05
+  },
+  "threads": 6,
+  "storage": {
+    "db_size_bytes": 4194304,
+    "journal_mode": "wal",
+    "integrity_status": "ok",
+    "total_records": 1420
+  },
+  "subsystems": {
+    "poller": "active",
+    "sqlite": "healthy",
+    "imap": "connected",
+    "smtp": "ready"
+  }
+}</code></pre>
+      </div>
+
+      <h3>GET /api/process/health</h3>
+      <p>Thực hiện kiểm tra đo độ trễ tức thời trên các hệ thống con và phản hồi độ trễ bằng micro-giây (µs).</p>
+      <div class="code-wrapper">
+        <div class="code-header">
+          <span>PHẢN HỒI (200 OK)</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-json">{
+  "status": "healthy",
+  "checked_at": "2026-11-09T14:45:00Z",
+  "components": {
+    "tokio_runtime": { "status": "ok", "latency_us": 180 },
+    "sqlite_database": { "status": "ok", "latency_us": 420 },
+    "background_poller": { "status": "ok", "latency_us": 85 },
+    "exchange_config": { "status": "ok", "latency_us": 50 }
+  }
+}</code></pre>
+      </div>
+
+      <h2 id="config-api">2. Các Endpoint Cấu hình</h2>
+
+      <h3>GET /api/config</h3>
+      <p>Lấy toàn bộ thông số cấu hình hiện tại của Exchange IMAP, Forwarding và SMTP Relay (mật khẩu đã được che giấu an toàn).</p>
+
+      <h3>POST /api/config/exchange</h3>
+      <p>Cập nhật thiết lập IMAP máy chủ Microsoft Exchange.</p>
+      <div class="code-wrapper">
+        <div class="code-header">
+          <span>THÂN YÊU CẦU (JSON)</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-json">{
+  "host": "mail.company.local",
+  "port": 993,
+  "encryption": "SSL/TLS",
+  "username": "CORP\\forwarder",
+  "password": "SecretPassword123",
+  "folder": "INBOX",
+  "mark_read": true,
+  "accept_invalid_certs": true
+}</code></pre>
+      </div>
+
+      <h3>POST /api/config/forwarding</h3>
+      <p>Cập nhật danh sách người nhận và quy tắc chuyển tiếp.</p>
+      <div class="code-wrapper">
+        <div class="code-header">
+          <span>THÂN YÊU CẦU (JSON)</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-json">{
+  "recipients": "user@gmail.com, ops@gmail.com",
+  "subject_prefix": "[Exchange-Fwd] ",
+  "poll_interval_mins": 1,
+  "include_header_banner": true,
+  "preserve_reply_to": true
+}</code></pre>
+      </div>
+
+      <h3>POST /api/config/smtp</h3>
+      <p>Cập nhật cấu hình Exchange SMTP Relay nội bộ.</p>
+      <div class="code-wrapper">
+        <div class="code-header">
+          <span>THÂN YÊU CẦU (JSON)</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-json">{
+  "host": "mail.company.local",
+  "port": 25,
+  "from_email": "forwarder@company.local",
+  "from_name": "Internal Exchange Relay",
+  "require_auth": false,
+  "username": "",
+  "password": ""
+}</code></pre>
+      </div>
+
+      <h2 id="controls-api">3. Điều khiển Poller &amp; Kiểm tra Kết nối</h2>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Phương thức &amp; Đường dẫn</th>
+              <th>Chức năng</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>POST /api/sync</code></td>
+              <td>Kích hoạt tiến trình quét ngầm kiểm tra hòm thư ngay tức thì.</td>
+            </tr>
+            <tr>
+              <td><code>POST /api/poller/pause</code></td>
+              <td>Tạm ngưng chu kỳ quét tự động định kỳ.</td>
+            </tr>
+            <tr>
+              <td><code>POST /api/poller/resume</code></td>
+              <td>Khôi phục chu kỳ quét tự động định kỳ.</td>
+            </tr>
+            <tr>
+              <td><code>POST /api/test/exchange</code></td>
+              <td>Kiểm tra kết nối và quyền đăng nhập IMAP tới máy chủ Exchange.</td>
+            </tr>
+            <tr>
+              <td><code>POST /api/test/smtp</code></td>
+              <td>Gửi một email thử nghiệm qua SMTP Relay để xác minh khả năng gửi tới Gmail.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 id="mailbox-api">4. Endpoint Trình khám phá Hộp thư</h2>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Phương thức &amp; Đường dẫn</th>
+              <th>Tham số</th>
+              <th>Mô tả chức năng</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>GET /api/mailbox/folders</code></td>
+              <td>Không có</td>
+              <td>Trả về danh sách tất cả các thư mục trong hòm thư Exchange.</td>
+            </tr>
+            <tr>
+              <td><code>GET /api/mailbox/messages</code></td>
+              <td><code>folder, page, page_size</code></td>
+              <td>Danh sách phân trang tiêu đề email trong thư mục đã chọn.</td>
+            </tr>
+            <tr>
+              <td><code>GET /api/mailbox/message</code></td>
+              <td><code>folder, uid</code></td>
+              <td>Xem chi tiết nội dung email (HTML, Plain Text) và metadata tệp đính kèm.</td>
+            </tr>
+            <tr>
+              <td><code>GET /api/mailbox/attachment</code></td>
+              <td><code>folder, uid, index</code></td>
+              <td>Tải về luồng nhị phân của tệp đính kèm tương ứng.</td>
+            </tr>
+            <tr>
+              <td><code>GET /api/mailbox/raw</code></td>
+              <td><code>folder, uid</code></td>
+              <td>Tải về tệp <code>.eml</code> RFC822 nguyên bản chưa qua chỉnh sửa.</td>
+            </tr>
+            <tr>
+              <td><code>POST /api/mailbox/forward</code></td>
+              <td><code>folder, uid, recipient (tùy chọn)</code></td>
+              <td>Kích hoạt gửi lại thủ công một email cụ thể.</td>
+            </tr>
+            <tr>
+              <td><code>POST /api/mailbox/mark-read</code></td>
+              <td><code>folder, uid, read (bool)</code></td>
+              <td>Đánh dấu email là đã đọc hoặc chưa đọc trên máy chủ Exchange.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="page-nav-footer">
+        <a href="mailbox-explorer.html" class="page-nav-btn">
+          <span class="page-nav-label">Quay lại</span>
+          <span class="page-nav-title">&larr; Trình khám phá Hộp thư</span>
+        </a>
+        <a href="index.html" class="page-nav-btn" style="text-align: right;">
+          <span class="page-nav-label">Về đầu trang</span>
+          <span class="page-nav-title">Tổng quan &amp; Điểm nổi bật &rarr;</span>
+        </a>
+      </div>
+    </main>
+
+    <!-- Table of Contents -->
+    <aside class="docs-toc">
+      <div class="toc-title">Mục lục trang</div>
+      <ul class="toc-nav">
+        <li><a href="#status-api">Trạng thái & Đo kiểm</a></li>
+        <li><a href="#config-api">Các API Cấu hình</a></li>
+        <li><a href="#controls-api">Điều khiển Poller & Kiểm tra</a></li>
+        <li><a href="#mailbox-api">API Khám phá Hộp thư</a></li>
+      </ul>
+    </aside>
+  </div>
+
+  <!-- Search Modal -->
+  <div class="search-modal" id="search-modal">
+    <div class="search-dialog">
+      <div class="search-input-box">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="search-input" placeholder="Nhập từ khóa tìm kiếm..." autocomplete="off">
+        <kbd class="search-shortcut">ESC</kbd>
+      </div>
+      <div class="search-results" id="search-results"></div>
+    </div>
+  </div>
+
+  <script src="../assets/js/docs.js"></script>
+</body>
+</html>

@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Operations & Monitoring - Smart Email Forwarder</title>
+  <meta name="description" content="Operational guide covering process telemetry, health checks, SQLite database maintenance, and troubleshooting.">
+  <link rel="stylesheet" href="./assets/css/docs.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="docs-header">
+    <div style="display: flex; align-items: center; gap: 1rem;">
+      <button class="mobile-nav-toggle" id="mobile-nav-toggle" aria-label="Toggle navigation">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <a href="index.html" class="brand">
+        <div class="brand-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        </div>
+        <span>Smart Email Forwarder</span>
+        <span class="brand-badge">v0.1.0</span>
+      </a>
+    </div>
+
+    <div class="header-actions">
+      <div class="lang-switch">
+        <span class="lang-btn active">EN</span>
+        <span class="lang-divider">/</span>
+        <a href="./vi/operations.html" class="lang-btn" title="Chuyển sang Tiếng Việt">VI</a>
+      </div>
+      <button class="search-trigger" id="search-trigger">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span>Search docs...</span>
+        <kbd class="search-shortcut">Ctrl K</kbd>
+      </button>
+      <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <a href="https://github.com/anhhtca/smart-email-fowarder" target="_blank" rel="noopener noreferrer" class="theme-toggle" aria-label="GitHub Repository">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+      </a>
+    </div>
+  </header>
+
+  <!-- Layout -->
+  <div class="docs-layout">
+    <!-- Sidebar -->
+    <aside class="docs-sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-title">Getting Started</div>
+        <ul class="sidebar-nav">
+          <li><a href="index.html" class="sidebar-link">Overview & Highlights</a></li>
+          <li><a href="index.html#quickstart" class="sidebar-link">Quick Start</a></li>
+          <li><a href="architecture.html" class="sidebar-link">System Architecture</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Deployment</div>
+        <ul class="sidebar-nav">
+          <li><a href="installation.html#windows" class="sidebar-link">Windows Server 2019</a></li>
+          <li><a href="installation.html#linux" class="sidebar-link">Linux Mint & Ubuntu</a></li>
+          <li><a href="installation.html#build" class="sidebar-link">Compiling from Source</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Configuration</div>
+        <ul class="sidebar-nav">
+          <li><a href="configuration.html#webui" class="sidebar-link">Web Management UI</a></li>
+          <li><a href="configuration.html#imap" class="sidebar-link">Exchange IMAP Settings</a></li>
+          <li><a href="configuration.html#smtp" class="sidebar-link">Exchange SMTP Relay</a></li>
+          <li><a href="configuration.html#forwarding" class="sidebar-link">Forwarding Rules</a></li>
+          <li><a href="configuration.html#cli" class="sidebar-link">CLI Arguments & Flags</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Operations & Features</div>
+        <ul class="sidebar-nav">
+          <li><a href="operations.html#telemetry" class="sidebar-link active">Process Monitor & Telemetry</a></li>
+          <li><a href="operations.html#health" class="sidebar-link">Subsystem Health Checks</a></li>
+          <li><a href="mailbox-explorer.html" class="sidebar-link">Mailbox Explorer</a></li>
+          <li><a href="operations.html#database" class="sidebar-link">Database Maintenance</a></li>
+          <li><a href="operations.html#troubleshooting" class="sidebar-link">Troubleshooting Guide</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Developers</div>
+        <ul class="sidebar-nav">
+          <li><a href="api.html" class="sidebar-link">REST API Reference</a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="docs-content">
+      <h1>Operations &amp; Monitoring</h1>
+      <p class="docs-lead">
+        Comprehensive operational runbook for monitoring service health, reading live telemetry, maintaining the embedded SQLite engine, and diagnosing network connectivity issues.
+      </p>
+
+      <h2 id="telemetry">Process Monitor &amp; Real-Time Telemetry</h2>
+      <p>
+        The <strong>Process Monitor</strong> tab in the web console surfaces deep OS-level telemetry directly from the host operating system kernel without requiring external agents like Prometheus or Datadog:
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Metric Category</th>
+              <th>Indicators</th>
+              <th>Description &amp; Diagnostic Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Identity &amp; Execution</strong></td>
+              <td>PID, PPID, Execution Mode, Uptime</td>
+              <td>Distinguishes between Interactive Console, native Windows Service, or systemd daemon. Uptime confirms service longevity.</td>
+            </tr>
+            <tr>
+              <td><strong>Memory Footprint</strong></td>
+              <td>RSS, VmSize, VmPeak</td>
+              <td>
+                • <strong>RSS (Resident Set Size):</strong> Actual physical RAM consumed (typically &lt; 25 MB).<br>
+                • <strong>VmPeak:</strong> Peak virtual memory allocated since startup to verify absence of leaks.
+              </td>
+            </tr>
+            <tr>
+              <td><strong>CPU &amp; Concurrency</strong></td>
+              <td>Cores, Load Averages (1m, 5m, 15m), OS Threads</td>
+              <td>Tracks active worker threads inside Tokio's asynchronous thread pool. Normal baseline is 4 to 8 threads.</td>
+            </tr>
+            <tr>
+              <td><strong>Database Telemetry</strong></td>
+              <td>File size, Journal Mode, Integrity Status, Total Records</td>
+              <td>Displays actual byte footprint of <code>forwarder.db</code>, verifies WAL mode, and shows total deduplicated email records.</td>
+            </tr>
+            <tr>
+              <td><strong>Component Subsystems</strong></td>
+              <td>Poller Worker, SQLite, IMAP Connector, SMTP Connector</td>
+              <td>Live operational indicators reflecting the health of each internal pipeline component.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 id="health">Subsystem Health Diagnostics</h2>
+      <p>
+        Clicking <strong>"Run Diagnostic Ping"</strong> on the Process Monitor triggers on-demand microsecond latency probes across the four core subsystems:
+      </p>
+
+      <div class="feature-grid">
+        <div class="feature-card">
+          <div class="feature-icon">⚡</div>
+          <h3>Tokio Async Runtime</h3>
+          <p>Dispatches an async task through Tokio's task queue to measure scheduling overhead and event-loop responsiveness (typically &lt; 1 ms).</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">💾</div>
+          <h3>SQLite Storage Engine</h3>
+          <p>Performs a round-trip <code>SELECT 1</code> and schema query to measure database lock latency and disk I/O performance.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">🔄</div>
+          <h3>Background Poller</h3>
+          <p>Validates the background loop task channel, verifying that sync triggers and interval timers are actively responsive.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">🌐</div>
+          <h3>Exchange Connectivity</h3>
+          <p>Inspects the stored credentials and endpoints to verify that IMAP and SMTP configurations are active and reachable.</p>
+        </div>
+      </div>
+
+      <h2 id="database">SQLite Database Maintenance</h2>
+      <p>
+        The database file defaults to <code>data/forwarder.db</code>. By default, it operates in <strong>Write-Ahead Logging (WAL)</strong> mode, allowing concurrent reads from web dashboard users while the poller writes new message records.
+      </p>
+
+      <h3>Manual Integrity Verification</h3>
+      <p>You can verify database consistency at any time from command line:</p>
+
+      <div class="code-wrapper">
+        <div class="code-header">
+          <span>BASH / CMD</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-bash">sqlite3 data/forwarder.db "PRAGMA integrity_check;"
+# Output: ok</code></pre>
+      </div>
+
+      <h3>Backing Up the Database</h3>
+      <p>Because SQLite WAL mode guarantees ACID transactions, you can safely copy <code>data/forwarder.db</code> even while the service is actively running:</p>
+
+      <pre><code class="language-bash"># Linux
+cp data/forwarder.db "data/forwarder-backup-$(date +%F).db"
+
+# Windows (PowerShell)
+Copy-Item data\forwarder.db -Destination "data\forwarder-backup-$(Get-Date -Format 'yyyyMMdd').db"</code></pre>
+
+      <h3>Database Vacuuming</h3>
+      <p>If millions of emails have been processed over years, optimize page allocation with VACUUM:</p>
+      <pre><code class="language-bash">sqlite3 data/forwarder.db "VACUUM;"</code></pre>
+
+      <h2 id="troubleshooting">Troubleshooting Guide</h2>
+
+      <div class="callout callout-warning">
+        <div class="callout-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Issue 1: "SSL/TLS handshake failed: certificate verify failed"
+        </div>
+        <p><strong>Cause:</strong> Your internal Exchange Server uses a self-signed SSL certificate or an enterprise certificate authority (Active Directory Certificate Services) not trusted by the host OS default trust store.</p>
+        <p><strong>Solution:</strong> Navigate to the <strong>Exchange Mailbox Settings</strong> tab in the Web UI and toggle <strong>"Accept Internal / Self-Signed SSL"</strong> to ON, then click <strong>"Save Settings"</strong>.</p>
+      </div>
+
+      <div class="callout callout-warning">
+        <div class="callout-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Issue 2: "550 5.7.1 Unable to relay" or "Relay access denied"
+        </div>
+        <p><strong>Cause:</strong> The Exchange Server SMTP Receive Connector rejected outbound routing of messages destined for external domains (e.g. <code>@gmail.com</code>).</p>
+        <p><strong>Solution:</strong> In Exchange Admin Center &rarr; <strong>Mail Flow &rarr; Receive Connectors</strong>:
+          <ol>
+            <li>Select the connector handling internal relay (e.g., port 25).</li>
+            <li>Under <strong>Scope &rarr; Remote IP addresses</strong>, ensure the host machine's IP is listed.</li>
+            <li>Under <strong>Security &rarr; Permission Groups</strong>, check <strong>Anonymous users</strong> or <strong>Exchange servers</strong>.</li>
+            <li>Alternatively, enable <strong>"Requires Authentication"</strong> in Smart Email Forwarder SMTP settings and supply an authorized domain user.</li>
+          </ol>
+        </p>
+      </div>
+
+      <div class="callout callout-warning">
+        <div class="callout-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Issue 3: "NO [AUTHENTICATIONFAILED] Invalid credentials"
+        </div>
+        <p><strong>Cause:</strong> Exchange IMAP requires specific domain naming format.</p>
+        <p><strong>Solution:</strong> Try varying the username format:
+          <ul>
+            <li><code>CORP\username</code> (NetBIOS domain format)</li>
+            <li><code>username@corp.local</code> (User Principal Name / UPN)</li>
+            <li><code>username</code> (if default domain is configured in Exchange IMAP service)</li>
+          </ul>
+        </p>
+      </div>
+
+      <div class="page-nav-footer">
+        <a href="configuration.html" class="page-nav-btn">
+          <span class="page-nav-label">Previous</span>
+          <span class="page-nav-title">&larr; Configuration Guide</span>
+        </a>
+        <a href="mailbox-explorer.html" class="page-nav-btn" style="text-align: right;">
+          <span class="page-nav-label">Next</span>
+          <span class="page-nav-title">Mailbox Explorer &rarr;</span>
+        </a>
+      </div>
+    </main>
+
+    <!-- Table of Contents -->
+    <aside class="docs-toc">
+      <div class="toc-title">On this page</div>
+      <ul class="toc-nav">
+        <li><a href="#telemetry">Process Telemetry</a></li>
+        <li><a href="#health">Subsystem Diagnostics</a></li>
+        <li><a href="#database">Database Maintenance</a></li>
+        <li><a href="#troubleshooting">Troubleshooting</a></li>
+      </ul>
+    </aside>
+  </div>
+
+  <!-- Search Modal -->
+  <div class="search-modal" id="search-modal">
+    <div class="search-dialog">
+      <div class="search-input-box">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="search-input" placeholder="Type keywords to search..." autocomplete="off">
+        <kbd class="search-shortcut">ESC</kbd>
+      </div>
+      <div class="search-results" id="search-results"></div>
+    </div>
+  </div>
+
+  <script src="./assets/js/docs.js"></script>
+</body>
+</html>

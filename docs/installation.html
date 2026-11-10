@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Installation & Deployment - Smart Email Forwarder</title>
+  <meta name="description" content="Step-by-step production deployment guides for Windows Server 2019 Standard and Linux Mint in offline air-gapped environments.">
+  <link rel="stylesheet" href="./assets/css/docs.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="docs-header">
+    <div style="display: flex; align-items: center; gap: 1rem;">
+      <button class="mobile-nav-toggle" id="mobile-nav-toggle" aria-label="Toggle navigation">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <a href="index.html" class="brand">
+        <div class="brand-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        </div>
+        <span>Smart Email Forwarder</span>
+        <span class="brand-badge">v0.1.0</span>
+      </a>
+    </div>
+
+    <div class="header-actions">
+      <div class="lang-switch">
+        <span class="lang-btn active">EN</span>
+        <span class="lang-divider">/</span>
+        <a href="./vi/installation.html" class="lang-btn" title="Chuyển sang Tiếng Việt">VI</a>
+      </div>
+      <button class="search-trigger" id="search-trigger">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span>Search docs...</span>
+        <kbd class="search-shortcut">Ctrl K</kbd>
+      </button>
+      <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <a href="https://github.com/anhhtca/smart-email-fowarder" target="_blank" rel="noopener noreferrer" class="theme-toggle" aria-label="GitHub Repository">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+      </a>
+    </div>
+  </header>
+
+  <!-- Layout -->
+  <div class="docs-layout">
+    <!-- Sidebar -->
+    <aside class="docs-sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-title">Getting Started</div>
+        <ul class="sidebar-nav">
+          <li><a href="index.html" class="sidebar-link">Overview & Highlights</a></li>
+          <li><a href="index.html#quickstart" class="sidebar-link">Quick Start</a></li>
+          <li><a href="architecture.html" class="sidebar-link">System Architecture</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Deployment</div>
+        <ul class="sidebar-nav">
+          <li><a href="installation.html#windows" class="sidebar-link active">Windows Server 2019</a></li>
+          <li><a href="installation.html#linux" class="sidebar-link">Linux Mint & Ubuntu</a></li>
+          <li><a href="installation.html#build" class="sidebar-link">Compiling from Source</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Configuration</div>
+        <ul class="sidebar-nav">
+          <li><a href="configuration.html#webui" class="sidebar-link">Web Management UI</a></li>
+          <li><a href="configuration.html#imap" class="sidebar-link">Exchange IMAP Settings</a></li>
+          <li><a href="configuration.html#smtp" class="sidebar-link">Exchange SMTP Relay</a></li>
+          <li><a href="configuration.html#forwarding" class="sidebar-link">Forwarding Rules</a></li>
+          <li><a href="configuration.html#cli" class="sidebar-link">CLI Arguments & Flags</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Operations & Features</div>
+        <ul class="sidebar-nav">
+          <li><a href="operations.html#telemetry" class="sidebar-link">Process Monitor & Telemetry</a></li>
+          <li><a href="operations.html#health" class="sidebar-link">Subsystem Health Checks</a></li>
+          <li><a href="mailbox-explorer.html" class="sidebar-link">Mailbox Explorer</a></li>
+          <li><a href="operations.html#database" class="sidebar-link">Database Maintenance</a></li>
+          <li><a href="operations.html#troubleshooting" class="sidebar-link">Troubleshooting Guide</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Developers</div>
+        <ul class="sidebar-nav">
+          <li><a href="api.html" class="sidebar-link">REST API Reference</a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="docs-content">
+      <h1>Installation &amp; Deployment</h1>
+      <p class="docs-lead">
+        Smart Email Forwarder is designed to deploy seamlessly in air-gapped enterprise environments with zero external dependencies, no package managers, and no runtime installations.
+      </p>
+
+      <h2 id="windows">Deployment on Windows Server 2019 Standard</h2>
+      <p>
+        Windows Server 2019 Standard in air-gapped production usually lacks internet connectivity. Deployment is accomplished by copying the single binary and registering it with the built-in Windows Service Control Manager (<code>sc.exe</code>).
+      </p>
+
+      <h3>Step 1: Copy Executable &amp; Scripts</h3>
+      <ol>
+        <li>Compile <code>smart-email-forwarder.exe</code> on a workstation or download the release artifact.</li>
+        <li>Create a dedicated directory on the target server, for instance <code>C:\SmartEmailForwarder</code>.</li>
+        <li>Copy <code>smart-email-forwarder.exe</code> and the <code>deploy\windows\</code> scripts into that directory:</li>
+      </ol>
+
+      <pre><code class="language-text">C:\SmartEmailForwarder\
+├── smart-email-forwarder.exe
+├── data\
+└── deploy\
+    └── windows\
+        ├── install_service.bat
+        ├── uninstall_service.bat
+        └── run.bat</code></pre>
+
+      <h3>Step 2: Automated Service Installation</h3>
+      <p>
+        Open <strong>Command Prompt</strong> or <strong>PowerShell</strong> as <strong>Administrator</strong> and execute:
+      </p>
+
+      <div class="code-wrapper">
+        <div class="code-header">
+          <span>CMD (ADMINISTRATOR)</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-cmd">cd C:\SmartEmailForwarder
+deploy\windows\install_service.bat</code></pre>
+      </div>
+
+      <div class="callout callout-tip">
+        <div class="callout-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          What install_service.bat Does
+        </div>
+        <p>The installer script checks for administrative privileges, registers <code>SmartEmailForwarder</code> with <code>sc.exe</code>, sets startup mode to <strong>Automatic</strong> (launches upon server boot before any user logs in), configures <strong>Crash Auto-Recovery</strong> to restart within 5 seconds, and starts the service immediately.</p>
+      </div>
+
+      <h3>Alternative: Manual <code>sc.exe</code> Commands</h3>
+      <p>If you prefer registering the service manually without the batch script:</p>
+
+      <div class="code-wrapper">
+        <div class="code-header">
+          <span>MANUAL SERVICE REGISTRATION</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-cmd">:: 1. Create the Service
+sc.exe create "SmartEmailForwarder" binPath= "\"C:\SmartEmailForwarder\smart-email-forwarder.exe\" --service" start= auto DisplayName= "Smart Email Forwarder"
+
+:: 2. Set Service Description
+sc.exe description "SmartEmailForwarder" "Polls MS Exchange mailbox and forwards emails to Gmail via internal Exchange relay."
+
+:: 3. Configure Failure Recovery (restart after 5000ms)
+sc.exe failure "SmartEmailForwarder" reset= 86400 actions= restart/5000/restart/5000/restart/5000
+
+:: 4. Start the Service
+sc.exe start "SmartEmailForwarder"</code></pre>
+      </div>
+
+      <h3>Windows Firewall Configuration (Optional)</h3>
+      <p>To access the Web UI from another workstation on the internal corporate network, allow inbound traffic on port 8080:</p>
+
+      <div class="code-wrapper">
+        <div class="code-header">
+          <span>POWERSHELL (ADMINISTRATOR)</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-powershell">New-NetFirewallRule -Name "SmartEmailForwarder_WebUI" `
+  -DisplayName "Smart Email Forwarder Web Console (Port 8080)" `
+  -Direction Inbound `
+  -Protocol TCP `
+  -LocalPort 8080 `
+  -Action Allow</code></pre>
+      </div>
+
+      <h2 id="linux">Deployment on Linux Mint &amp; Ubuntu</h2>
+      <p>On Linux systems, Smart Email Forwarder runs as a managed <code>systemd</code> system daemon.</p>
+
+      <h3>Step 1: Install Binary</h3>
+      <div class="code-wrapper">
+        <div class="code-header">
+          <span>BASH</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-bash"># Create application directory
+sudo mkdir -p /opt/smart-email-forwarder/data
+
+# Copy binary and grant execute permissions
+sudo cp target/release/smart-email-forwarder /opt/smart-email-forwarder/
+sudo chmod +x /opt/smart-email-forwarder/smart-email-forwarder</code></pre>
+      </div>
+
+      <h3>Step 2: Configure Systemd Service</h3>
+      <p>Copy the included unit file from <code>deploy/linux/email-forwarder.service</code> to <code>/etc/systemd/system/</code>:</p>
+
+      <div class="code-wrapper">
+        <div class="code-header">
+          <span>/etc/systemd/system/email-forwarder.service</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-ini">[Unit]
+Description=Smart Email Forwarder Service
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/smart-email-forwarder
+ExecStart=/opt/smart-email-forwarder/smart-email-forwarder --port 8080 --host 0.0.0.0 --db /opt/smart-email-forwarder/data/forwarder.db
+Restart=always
+RestartSec=5s
+LimitNOFILE=65536
+Environment=RUST_LOG=smart_email_forwarder=info,tower_http=info
+
+[Install]
+WantedBy=multi-user.target</code></pre>
+      </div>
+
+      <h3>Step 3: Enable &amp; Start Daemon</h3>
+      <div class="code-wrapper">
+        <div class="code-header">
+          <span>BASH</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-bash"># Reload systemd definitions
+sudo systemctl daemon-reload
+
+# Enable service on boot and start immediately
+sudo systemctl enable --now email-forwarder.service
+
+# Verify service status
+sudo systemctl status email-forwarder.service
+
+# View real-time log output
+journalctl -u email-forwarder.service -f</code></pre>
+      </div>
+
+      <h2 id="build">Compiling from Source</h2>
+      <p>If you are building the binary from source in an enterprise environment:</p>
+
+      <h3>Prerequisites</h3>
+      <ul>
+        <li><strong>Rust Toolchain:</strong> Rust 1.75+ (installable via <code>rustup</code>).</li>
+        <li><strong>C Compiler:</strong> <code>gcc</code>/<code>clang</code> on Linux, or Visual Studio Build Tools (C++ workload) on Windows (required for bundling SQLite).</li>
+        <li><strong>OpenSSL:</strong> OpenSSL headers (or use native Windows SChannel).</li>
+      </ul>
+
+      <h3>Offline Vendoring for Air-Gapped Workstations</h3>
+      <p>If the build machine itself has internet access before moving into an air-gapped room, pre-vendor all crate dependencies:</p>
+
+      <div class="code-wrapper">
+        <div class="code-header">
+          <span>BASH</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-bash"># Download and vendor all Cargo dependencies into vendor/ directory
+cargo vendor
+
+# Build in 100% offline mode without contacting crates.io
+cargo build --release --frozen --offline</code></pre>
+      </div>
+
+      <h3>Cross-Compiling for Windows from Linux</h3>
+      <pre><code class="language-bash"># Add Windows target
+rustup target add x86_64-pc-windows-gnu
+
+# Install mingw-w64 compiler
+sudo apt-get install mingw-w64
+
+# Compile .exe binary
+cargo build --release --target x86_64-pc-windows-gnu</code></pre>
+
+      <div class="page-nav-footer">
+        <a href="architecture.html" class="page-nav-btn">
+          <span class="page-nav-label">Previous</span>
+          <span class="page-nav-title">&larr; System Architecture</span>
+        </a>
+        <a href="configuration.html" class="page-nav-btn" style="text-align: right;">
+          <span class="page-nav-label">Next</span>
+          <span class="page-nav-title">Configuration Guide &rarr;</span>
+        </a>
+      </div>
+    </main>
+
+    <!-- Table of Contents -->
+    <aside class="docs-toc">
+      <div class="toc-title">On this page</div>
+      <ul class="toc-nav">
+        <li><a href="#windows">Windows Server 2019</a></li>
+        <li><a href="#linux">Linux Mint & Ubuntu</a></li>
+        <li><a href="#build">Compiling from Source</a></li>
+      </ul>
+    </aside>
+  </div>
+
+  <!-- Search Modal -->
+  <div class="search-modal" id="search-modal">
+    <div class="search-dialog">
+      <div class="search-input-box">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="search-input" placeholder="Type keywords to search..." autocomplete="off">
+        <kbd class="search-shortcut">ESC</kbd>
+      </div>
+      <div class="search-results" id="search-results"></div>
+    </div>
+  </div>
+
+  <script src="./assets/js/docs.js"></script>
+</body>
+</html>

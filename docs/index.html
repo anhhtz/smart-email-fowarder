@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Email Forwarder - Enterprise Email Bridge & Relay Documentation</title>
+  <meta name="description" content="Official documentation for Smart Email Forwarder: A minimal, reliable, cross-platform email forwarder written in Rust for offline and air-gapped enterprise environments.">
+  <link rel="stylesheet" href="./assets/css/docs.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="docs-header">
+    <div style="display: flex; align-items: center; gap: 1rem;">
+      <button class="mobile-nav-toggle" id="mobile-nav-toggle" aria-label="Toggle navigation">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <a href="index.html" class="brand">
+        <div class="brand-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        </div>
+        <span>Smart Email Forwarder</span>
+        <span class="brand-badge">v0.1.0</span>
+      </a>
+    </div>
+
+    <div class="header-actions">
+      <div class="lang-switch">
+        <span class="lang-btn active">EN</span>
+        <span class="lang-divider">/</span>
+        <a href="./vi/index.html" class="lang-btn" title="Chuyển sang Tiếng Việt">VI</a>
+      </div>
+      <button class="search-trigger" id="search-trigger">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span>Search docs...</span>
+        <kbd class="search-shortcut">Ctrl K</kbd>
+      </button>
+      <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <a href="https://github.com/anhhtca/smart-email-fowarder" target="_blank" rel="noopener noreferrer" class="theme-toggle" aria-label="GitHub Repository">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+      </a>
+    </div>
+  </header>
+
+  <!-- Layout -->
+  <div class="docs-layout">
+    <!-- Sidebar -->
+    <aside class="docs-sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-title">Getting Started</div>
+        <ul class="sidebar-nav">
+          <li><a href="index.html" class="sidebar-link active">Overview & Highlights</a></li>
+          <li><a href="index.html#quickstart" class="sidebar-link">Quick Start</a></li>
+          <li><a href="architecture.html" class="sidebar-link">System Architecture</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Deployment</div>
+        <ul class="sidebar-nav">
+          <li><a href="installation.html#windows" class="sidebar-link">Windows Server 2019</a></li>
+          <li><a href="installation.html#linux" class="sidebar-link">Linux Mint & Ubuntu</a></li>
+          <li><a href="installation.html#build" class="sidebar-link">Compiling from Source</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Configuration</div>
+        <ul class="sidebar-nav">
+          <li><a href="configuration.html#webui" class="sidebar-link">Web Management UI</a></li>
+          <li><a href="configuration.html#imap" class="sidebar-link">Exchange IMAP Settings</a></li>
+          <li><a href="configuration.html#smtp" class="sidebar-link">Exchange SMTP Relay</a></li>
+          <li><a href="configuration.html#forwarding" class="sidebar-link">Forwarding Rules</a></li>
+          <li><a href="configuration.html#cli" class="sidebar-link">CLI Arguments & Flags</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Operations & Features</div>
+        <ul class="sidebar-nav">
+          <li><a href="operations.html#telemetry" class="sidebar-link">Process Monitor & Telemetry</a></li>
+          <li><a href="operations.html#health" class="sidebar-link">Subsystem Health Checks</a></li>
+          <li><a href="mailbox-explorer.html" class="sidebar-link">Mailbox Explorer</a></li>
+          <li><a href="operations.html#database" class="sidebar-link">Database Maintenance</a></li>
+          <li><a href="operations.html#troubleshooting" class="sidebar-link">Troubleshooting Guide</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Developers</div>
+        <ul class="sidebar-nav">
+          <li><a href="api.html" class="sidebar-link">REST API Reference</a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="docs-content">
+      <h1>Smart Email Forwarder</h1>
+      <p class="docs-lead">
+        A minimal, ultra-reliable, cross-platform email forwarding daemon written in Rust. Specifically engineered for <strong>offline and air-gapped enterprise environments</strong> such as Windows Server 2019 Standard and Linux Mint.
+      </p>
+
+      <div class="callout callout-info">
+        <div class="callout-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          Enterprise Air-Gapped Ready
+        </div>
+        <p>Smart Email Forwarder requires <strong>zero internet connectivity</strong> on the hosting server. It monitors an internal Microsoft Exchange mailbox via local IMAP, deduplicates incoming emails in an embedded SQLite engine, and forwards them to external destinations (e.g., Gmail) through the local Exchange SMTP relay.</p>
+      </div>
+
+      <h2 id="features">Key Highlights</h2>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <div class="feature-icon">📦</div>
+          <h3>100% Offline Single Binary</h3>
+          <p>Compiles into a standalone <code>.exe</code> or ELF binary. Web UI assets and SQLite are compiled directly into the binary (<code>rusqlite(bundled)</code>). Zero external DLLs, Node.js, Python, or SQL servers required.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">🛡️</div>
+          <h3>Air-Gapped LAN Security</h3>
+          <p>The host server communicates exclusively on the internal corporate network with Exchange. Supports internal enterprise CA root certificates and self-signed SSL/TLS.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">📬</div>
+          <h3>Full Email Fidelity</h3>
+          <p>Preserves rich HTML, plain text, and all binary attachments (PDF, XLSX, ZIP, images). Preserves the original sender in <code>Reply-To</code> for effortless Gmail replying.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">⚡</div>
+          <h3>Zero Duplicate Forwarding</h3>
+          <p>Tracks RFC822 Message-IDs in SQLite with indexed lookups to guarantee that server restarts or network interruptions never trigger duplicate forwards.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">🔄</div>
+          <h3>Unattended Background Service</h3>
+          <p>Installs natively as a Windows Service on Windows Server 2019 (auto-boot, auto-recovery on failure in 5s) and as a <code>systemd</code> daemon on Linux Mint/Ubuntu.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">📊</div>
+          <h3>Embedded Admin Console</h3>
+          <p>Modern responsive web console at <code>http://localhost:8080</code> with real-time process telemetry (CPU, RSS memory, thread pool), live sync triggers, and Mailbox Explorer.</p>
+        </div>
+      </div>
+
+      <h2 id="architecture-preview">Architecture at a Glance</h2>
+      <div class="diagram-box">
+        <svg viewBox="0 0 780 260" xmlns="http://www.w3.org/2000/svg" style="font-family: var(--font-sans);">
+          <!-- Background LAN container -->
+          <rect x="10" y="10" width="530" height="240" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="4,4"/>
+          <text x="30" y="36" font-size="12" font-weight="700" fill="#475569">INTERNAL AIR-GAPPED ENTERPRISE LAN (No Public Internet)</text>
+
+          <!-- Exchange Box -->
+          <rect x="30" y="60" width="210" height="170" rx="8" fill="#1e293b" stroke="#0f172a" stroke-width="1.5"/>
+          <text x="50" y="88" font-size="14" font-weight="700" fill="#f8fafc">Internal MS Exchange</text>
+          <text x="50" y="112" font-size="12" fill="#94a3b8">• IMAP: 993 (TLS) / 143</text>
+          <text x="50" y="132" font-size="12" fill="#94a3b8">• SMTP Relay: 25 / 587</text>
+          <text x="50" y="152" font-size="12" fill="#94a3b8">• Corporate Mailboxes</text>
+          <rect x="50" y="172" width="170" height="40" rx="4" fill="#334155"/>
+          <text x="60" y="196" font-size="11" fill="#38bdf8">Outbound Internet Allowed</text>
+
+          <!-- Server / App Box -->
+          <rect x="300" y="60" width="220" height="170" rx="8" fill="#ffffff" stroke="#1d4ed8" stroke-width="2"/>
+          <text x="315" y="88" font-size="14" font-weight="700" fill="#1d4ed8">Smart Email Forwarder</text>
+          <text x="315" y="108" font-size="11" fill="#64748b">Single Rust Executable</text>
+          <text x="315" y="132" font-size="12" fill="#334155">⚡ Tokio Async Poller</text>
+          <text x="315" y="152" font-size="12" fill="#334155">💾 Embedded SQLite Engine</text>
+          <text x="315" y="172" font-size="12" fill="#334155">🌐 Axum Web UI (:8080)</text>
+          <text x="315" y="192" font-size="12" fill="#334155">📊 Process Telemetry</text>
+
+          <!-- Arrows inside LAN -->
+          <path d="M 300 115 L 240 115" stroke="#0284c7" stroke-width="2" marker-end="url(#arrow-blue)" fill="none"/>
+          <text x="252" y="105" font-size="10" font-weight="600" fill="#0284c7">IMAP</text>
+
+          <path d="M 300 155 L 240 155" stroke="#10b981" stroke-width="2" marker-end="url(#arrow-green)" fill="none"/>
+          <text x="252" y="170" font-size="10" font-weight="600" fill="#10b981">SMTP</text>
+
+          <!-- Internet WAN -->
+          <rect x="580" y="60" width="180" height="170" rx="8" fill="#f0fdf4" stroke="#10b981" stroke-width="1.5"/>
+          <text x="600" y="88" font-size="13" font-weight="700" fill="#047857">External Internet</text>
+          <text x="600" y="115" font-size="13" font-weight="600" fill="#0f172a">Gmail Accounts</text>
+          <text x="600" y="140" font-size="11" fill="#475569">user@gmail.com</text>
+          <text x="600" y="160" font-size="11" fill="#475569">ops@gmail.com</text>
+          <text x="600" y="195" font-size="10" fill="#059669">Delivered via Exchange</text>
+
+          <!-- Arrow from Exchange to WAN -->
+          <path d="M 135 60 C 135 20, 670 20, 670 60" stroke="#f59e0b" stroke-width="2.5" stroke-dasharray="5,3" fill="none"/>
+          <text x="380" y="32" font-size="11" font-weight="600" fill="#d97706">Exchange relays to Gmail over WAN</text>
+
+          <defs>
+            <marker id="arrow-blue" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="#0284c7"/>
+            </marker>
+            <marker id="arrow-green" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="#10b981"/>
+            </marker>
+          </defs>
+        </svg>
+        <div class="diagram-caption">Figure 1.1: Air-gapped network topology. The forwarder communicates exclusively with Exchange on the local LAN.</div>
+      </div>
+
+      <h2 id="quickstart">Quick Start</h2>
+      <p>Follow these simple steps to compile and run Smart Email Forwarder on any development workstation or server:</p>
+
+      <div class="tabs-container">
+        <div class="tabs-nav">
+          <button class="tab-btn active" data-tab="quick-dev">Development Mode</button>
+          <button class="tab-btn" data-tab="quick-release">Release Build</button>
+          <button class="tab-btn" data-tab="quick-cli">CLI Parameters</button>
+        </div>
+
+        <div class="tab-pane active" data-tab="quick-dev">
+          <p>Clone the repository and run immediately with Cargo:</p>
+          <pre><code class="language-bash"># Run directly in development mode (starts on port 8080)
+cargo run
+
+# Run with verbose debug logging enabled
+RUST_LOG=smart_email_forwarder=debug,tower_http=debug cargo run
+
+# Run with custom port and database directory
+cargo run -- --port 9000 --db data/forwarder.db</code></pre>
+          <p>Once started, open your browser to <a href="http://localhost:8080" target="_blank"><code>http://localhost:8080</code></a>.</p>
+        </div>
+
+        <div class="tab-pane" data-tab="quick-release">
+          <p>Compile a standalone, highly optimized release binary:</p>
+          <pre><code class="language-bash"># Build optimized release binary
+cargo build --release
+
+# Run standalone executable
+./target/release/smart-email-forwarder --port 8080 --host 0.0.0.0</code></pre>
+          <p>The resulting binary is completely self-contained. You can copy it to your target server without installing Rust or any runtime dependencies.</p>
+        </div>
+
+        <div class="tab-pane" data-tab="quick-cli">
+          <p>Smart Email Forwarder provides intuitive command-line options:</p>
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Flag</th>
+                  <th>Default</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>-p, --port &lt;PORT&gt;</code></td>
+                  <td><code>8080</code></td>
+                  <td>Port number for the embedded web console and REST API.</td>
+                </tr>
+                <tr>
+                  <td><code>--host &lt;HOST&gt;</code></td>
+                  <td><code>0.0.0.0</code></td>
+                  <td>IP address to bind the web server (use <code>0.0.0.0</code> for intranet access).</td>
+                </tr>
+                <tr>
+                  <td><code>--db &lt;PATH&gt;</code></td>
+                  <td><code>data/forwarder.db</code></td>
+                  <td>Path to SQLite database file. Created automatically if not present.</td>
+                </tr>
+                <tr>
+                  <td><code>--service</code></td>
+                  <td><code>false</code></td>
+                  <td>Invoked by Windows Service Control Manager when running as a Windows Service.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <h2 id="tech-stack">Technology Stack</h2>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Component</th>
+              <th>Technology</th>
+              <th>Rationale</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Core Language</strong></td>
+              <td>Rust (Edition 2021)</td>
+              <td>Memory safety, high performance, zero runtime overhead, single static binary.</td>
+            </tr>
+            <tr>
+              <td><strong>Async Runtime</strong></td>
+              <td>Tokio &amp; Tracing</td>
+              <td>High-throughput asynchronous I/O, scheduled periodic polling, non-blocking HTTP requests.</td>
+            </tr>
+            <tr>
+              <td><strong>Web &amp; API Server</strong></td>
+              <td>Axum &amp; Tower HTTP</td>
+              <td>Blazing-fast HTTP engine, embedded static asset delivery, resilient REST routing.</td>
+            </tr>
+            <tr>
+              <td><strong>Database</strong></td>
+              <td>SQLite (<code>rusqlite(bundled)</code>)</td>
+              <td>Embedded relational storage with WAL journaling; zero SQL server setup required.</td>
+            </tr>
+            <tr>
+              <td><strong>MIME Parsing &amp; Relay</strong></td>
+              <td><code>mail-parser</code> &amp; <code>lettre</code></td>
+              <td>Full RFC822/MIME parsing, multipart preservation, nested attachments, secure STARTTLS/SSL relay.</td>
+            </tr>
+            <tr>
+              <td><strong>Frontend Admin UI</strong></td>
+              <td>Vanilla HTML5, CSS3, ES6</td>
+              <td>Embedded directly into the binary (<code>include_str!</code>); zero CDN calls, works 100% offline.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="page-nav-footer">
+        <div></div>
+        <a href="architecture.html" class="page-nav-btn" style="text-align: right;">
+          <span class="page-nav-label">Next</span>
+          <span class="page-nav-title">System Architecture &rarr;</span>
+        </a>
+      </div>
+    </main>
+
+    <!-- Table of Contents -->
+    <aside class="docs-toc">
+      <div class="toc-title">On this page</div>
+      <ul class="toc-nav">
+        <li><a href="#features">Key Highlights</a></li>
+        <li><a href="#architecture-preview">Architecture at a Glance</a></li>
+        <li><a href="#quickstart">Quick Start</a></li>
+        <li><a href="#tech-stack">Technology Stack</a></li>
+      </ul>
+    </aside>
+  </div>
+
+  <!-- Search Modal -->
+  <div class="search-modal" id="search-modal">
+    <div class="search-dialog">
+      <div class="search-input-box">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="search-input" placeholder="Type keywords to search..." autocomplete="off">
+        <kbd class="search-shortcut">ESC</kbd>
+      </div>
+      <div class="search-results" id="search-results"></div>
+    </div>
+  </div>
+
+  <script src="./assets/js/docs.js"></script>
+</body>
+</html>

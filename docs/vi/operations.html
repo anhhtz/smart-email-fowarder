@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vận hành & Giám sát - Smart Email Forwarder</title>
+  <meta name="description" content="Cẩm nang vận hành chi tiết: đo kiểm tài nguyên tiến trình, chẩn đoán sức khỏe hệ thống con, bảo trì cơ sở dữ liệu SQLite và xử lý sự cố.">
+  <link rel="stylesheet" href="../assets/css/docs.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="docs-header">
+    <div style="display: flex; align-items: center; gap: 1rem;">
+      <button class="mobile-nav-toggle" id="mobile-nav-toggle" aria-label="Mở menu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <a href="index.html" class="brand">
+        <div class="brand-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        </div>
+        <span>Smart Email Forwarder</span>
+        <span class="brand-badge">v0.1.0</span>
+      </a>
+    </div>
+
+    <div class="header-actions">
+      <div class="lang-switch">
+        <a href="../operations.html" class="lang-btn" title="Switch to English">EN</a>
+        <span class="lang-divider">/</span>
+        <span class="lang-btn active">VI</span>
+      </div>
+      <button class="search-trigger" id="search-trigger">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span>Tìm kiếm tài liệu...</span>
+        <kbd class="search-shortcut">Ctrl K</kbd>
+      </button>
+      <button class="theme-toggle" id="theme-toggle" aria-label="Đổi giao diện">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <a href="https://github.com/anhhtca/smart-email-fowarder" target="_blank" rel="noopener noreferrer" class="theme-toggle" aria-label="Mã nguồn GitHub">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+      </a>
+    </div>
+  </header>
+
+  <!-- Layout -->
+  <div class="docs-layout">
+    <!-- Sidebar -->
+    <aside class="docs-sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-title">Bắt đầu</div>
+        <ul class="sidebar-nav">
+          <li><a href="index.html" class="sidebar-link">Tổng quan & Điểm nổi bật</a></li>
+          <li><a href="index.html#quickstart" class="sidebar-link">Bắt đầu nhanh</a></li>
+          <li><a href="architecture.html" class="sidebar-link">Kiến trúc hệ thống</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Triển khai</div>
+        <ul class="sidebar-nav">
+          <li><a href="installation.html#windows" class="sidebar-link">Windows Server 2019</a></li>
+          <li><a href="installation.html#linux" class="sidebar-link">Linux Mint & Ubuntu</a></li>
+          <li><a href="installation.html#build" class="sidebar-link">Biên dịch từ mã nguồn</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Cấu hình</div>
+        <ul class="sidebar-nav">
+          <li><a href="configuration.html#webui" class="sidebar-link">Giao diện Web Console</a></li>
+          <li><a href="configuration.html#imap" class="sidebar-link">Cấu hình IMAP Exchange</a></li>
+          <li><a href="configuration.html#smtp" class="sidebar-link">Cấu hình SMTP Relay</a></li>
+          <li><a href="configuration.html#forwarding" class="sidebar-link">Quy tắc chuyển tiếp</a></li>
+          <li><a href="configuration.html#cli" class="sidebar-link">Tham số dòng lệnh CLI</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Vận hành & Tính năng</div>
+        <ul class="sidebar-nav">
+          <li><a href="operations.html#telemetry" class="sidebar-link active">Giám sát tài nguyên (Process Monitor)</a></li>
+          <li><a href="operations.html#health" class="sidebar-link">Kiểm tra sức khỏe hệ thống con</a></li>
+          <li><a href="mailbox-explorer.html" class="sidebar-link">Trình khám phá Hộp thư</a></li>
+          <li><a href="operations.html#database" class="sidebar-link">Bảo trì cơ sở dữ liệu</a></li>
+          <li><a href="operations.html#troubleshooting" class="sidebar-link">Hướng dẫn xử lý sự cố</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Lập trình viên</div>
+        <ul class="sidebar-nav">
+          <li><a href="api.html" class="sidebar-link">Tài liệu REST API</a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="docs-content">
+      <h1>Vận hành &amp; Giám sát</h1>
+      <p class="docs-lead">
+        Cẩm nang vận hành dành cho quản trị viên hệ thống: theo dõi số liệu đo kiểm tiến trình, chẩn đoán độ trễ hệ thống con, bảo trì cơ sở dữ liệu SQLite và xử lý sự cố mạng.
+      </p>
+
+      <h2 id="telemetry">Giám sát Tiến trình &amp; Đo kiểm Thời gian thực</h2>
+      <p>
+        Tab <strong>Process Monitor</strong> trên giao diện Web trích xuất trực tiếp số liệu từ kernel hệ điều hành mà không cần cài đặt thêm các agent nặng nề như Prometheus hay Datadog:
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Nhóm chỉ số</th>
+              <th>Tham số theo dõi</th>
+              <th>Ý nghĩa &amp; Giá trị chẩn đoán</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Định danh &amp; Chế độ chạy</strong></td>
+              <td>PID, PPID, Chế độ thực thi, Thời gian hoạt động (Uptime)</td>
+              <td>Phân biệt rõ ràng giữa Console tương tác, Windows Service hay dịch vụ systemd. Thời gian uptime khẳng định độ ổn định lâu dài.</td>
+            </tr>
+            <tr>
+              <td><strong>Mức chiếm dụng RAM</strong></td>
+              <td>RSS, VmSize, VmPeak</td>
+              <td>
+                • <strong>RSS (Resident Set Size):</strong> Dung lượng RAM vật lý thực sự đang dùng (thường &lt; 25 MB).<br>
+                • <strong>VmPeak:</strong> Dung lượng ảo đỉnh điểm kể từ lúc bật máy nhằm đảm bảo tiến trình không bị rò rỉ bộ nhớ.
+              </td>
+            </tr>
+            <tr>
+              <td><strong>CPU &amp; Số luồng</strong></td>
+              <td>Số core CPU, Mức tải trung bình (1m, 5m, 15m), Số luồng OS</td>
+              <td>Theo dõi số luồng worker thực thi trong pool của Tokio async runtime. Định mức chuẩn là từ 4 đến 8 luồng.</td>
+            </tr>
+            <tr>
+              <td><strong>Thông số Cơ sở dữ liệu</strong></td>
+              <td>Kích thước file, Journal Mode, Tính toàn vẹn, Tổng số bản ghi</td>
+              <td>Hiển thị dung lượng byte thực của <code>forwarder.db</code>, xác nhận chế độ ghi WAL và tổng số email đã lưu vết chống trùng.</td>
+            </tr>
+            <tr>
+              <td><strong>Trạng thái Hệ thống con</strong></td>
+              <td>Poller Worker, SQLite, IMAP Connector, SMTP Connector</td>
+              <td>Đèn báo trạng thái hoạt động độc lập của từng module bên trong pipeline.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 id="health">Kiểm tra Sức khỏe Hệ thống con (Diagnostic Ping)</h2>
+      <p>
+        Khi nhấn nút <strong>"Run Diagnostic Ping"</strong>, ứng dụng thực hiện các bài kiểm tra đo độ trễ phản hồi tính bằng micro-giây (µs) trên cả 4 thành phần nòng cốt:
+      </p>
+
+      <div class="feature-grid">
+        <div class="feature-card">
+          <div class="feature-icon">⚡</div>
+          <h3>Runtime Tokio Async</h3>
+          <p>Điều phối một tác vụ qua hàng đợi của Tokio để đo độ trễ điều vận event-loop (thường &lt; 1 ms).</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">💾</div>
+          <h3>Động cơ Lưu trữ SQLite</h3>
+          <p>Thực hiện truy vấn vòng lặp <code>SELECT 1</code> để đo độ trễ ghi/khóa cơ sở dữ liệu và hiệu năng ổ cứng.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">🔄</div>
+          <h3>Tiến trình Quét ngầm (Poller)</h3>
+          <p>Xác thực kênh giao tiếp của vòng lặp nền, đảm bảo bộ đếm chu kỳ và tín hiệu kích hoạt đồng bộ luôn sẵn sàng.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">🌐</div>
+          <h3>Cấu hình Kết nối Exchange</h3>
+          <p>Kiểm tra tính hợp lệ của thông số đăng nhập và điểm cuối IMAP/SMTP đã lưu trong hệ thống.</p>
+        </div>
+      </div>
+
+      <h2 id="database">Bảo trì Cơ sở dữ liệu SQLite</h2>
+      <p>
+        Tệp cơ sở dữ liệu mặc định đặt tại <code>data/forwarder.db</code>. Cơ chế <strong>Write-Ahead Logging (WAL)</strong> cho phép nhiều người cùng mở xem dashboard mà không làm ảnh hưởng đến tiến trình quét email đang ghi vào cơ sở dữ liệu.
+      </p>
+
+      <h3>Kiểm tra Tính Toàn vẹn Thủ công</h3>
+      <p>Bạn có thể xác thực tính toàn vẹn cấu trúc cơ sở dữ liệu bất cứ lúc nào:</p>
+
+      <div class="code-wrapper">
+        <div class="code-header">
+          <span>BASH / CMD</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code class="language-bash">sqlite3 data/forwarder.db "PRAGMA integrity_check;"
+# Kết quả chuẩn: ok</code></pre>
+      </div>
+
+      <h3>Sao lưu Dữ liệu An toàn khi Dịch vụ đang chạy</h3>
+      <p>Nhờ cơ chế WAL của SQLite, bạn có thể sao chép an toàn tệp <code>data/forwarder.db</code> ngay cả khi dịch vụ đang xử lý email mà không lo hỏng tệp:</p>
+
+      <pre><code class="language-bash"># Trên Linux
+cp data/forwarder.db "data/forwarder-backup-$(date +%F).db"
+
+# Trên Windows (PowerShell)
+Copy-Item data\forwarder.db -Destination "data\forwarder-backup-$(Get-Date -Format 'yyyyMMdd').db"</code></pre>
+
+      <h3>Dọn dẹp và Thu gọn Bộ nhớ (Vacuum)</h3>
+      <p>Sau nhiều năm vận hành với hàng triệu email, bạn có thể tái cấu trúc và giải phóng dung lượng phân mảnh:</p>
+      <pre><code class="language-bash">sqlite3 data/forwarder.db "VACUUM;"</code></pre>
+
+      <h2 id="troubleshooting">Hướng dẫn Xử lý Sự cố thường gặp</h2>
+
+      <div class="callout callout-warning">
+        <div class="callout-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Sự cố 1: "SSL/TLS handshake failed: certificate verify failed"
+        </div>
+        <p><strong>Nguyên nhân:</strong> Máy chủ Exchange nội bộ sử dụng chứng chỉ số tự ký (Self-signed) hoặc chứng chỉ do máy chủ chứng thực nội bộ (Active Directory Certificate Services) cấp mà hệ điều hành chưa nạp vào kho Root Trust Store mặc định.</p>
+        <p><strong>Cách xử lý:</strong> Vào tab <strong>Exchange Mailbox Settings</strong> trên giao diện Web, gạt nút <strong>"Accept Internal / Self-Signed SSL"</strong> sang BẬT, sau đó bấm <strong>"Save Settings"</strong>.</p>
+      </div>
+
+      <div class="callout callout-warning">
+        <div class="callout-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Sự cố 2: "550 5.7.1 Unable to relay" hoặc "Relay access denied"
+        </div>
+        <p><strong>Nguyên nhân:</strong> Receive Connector của Exchange từ chối chuyển tiếp thư ra các hòm thư tên miền bên ngoài (như <code>@gmail.com</code>).</p>
+        <p><strong>Cách xử lý:</strong> Trong Exchange Admin Center (EAC) &rarr; <strong>Mail Flow &rarr; Receive Connectors</strong>:
+          <ol>
+            <li>Chọn connector dùng để chuyển tiếp nội bộ (cổng 25).</li>
+            <li>Trong mục <strong>Scope &rarr; Remote IP addresses</strong>, thêm IP của máy chủ chạy Smart Email Forwarder.</li>
+            <li>Trong mục <strong>Security &rarr; Permission Groups</strong>, tích chọn <strong>Anonymous users</strong> hoặc <strong>Exchange servers</strong>.</li>
+            <li>Hoặc bật <strong>"Requires Authentication"</strong> trong cấu hình SMTP của Smart Email Forwarder và nhập tài khoản domain có quyền gửi thư ra ngoài.</li>
+          </ol>
+        </p>
+      </div>
+
+      <div class="callout callout-warning">
+        <div class="callout-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Sự cố 3: "NO [AUTHENTICATIONFAILED] Invalid credentials"
+        </div>
+        <p><strong>Nguyên nhân:</strong> Dịch vụ IMAP của Exchange yêu cầu định dạng tên đăng nhập cụ thể theo cấu hình Active Directory.</p>
+        <p><strong>Cách xử lý:</strong> Thử lần lượt các định dạng tên đăng nhập sau:
+          <ul>
+            <li><code>CORP\username</code> (Định dạng NetBIOS Domain)</li>
+            <li><code>username@corp.local</code> (Định dạng User Principal Name / UPN)</li>
+            <li><code>username</code> (Nếu Exchange IMAP đã chỉ định sẵn Default Domain)</li>
+          </ul>
+        </p>
+      </div>
+
+      <div class="page-nav-footer">
+        <a href="configuration.html" class="page-nav-btn">
+          <span class="page-nav-label">Quay lại</span>
+          <span class="page-nav-title">&larr; Hướng dẫn Cấu hình</span>
+        </a>
+        <a href="mailbox-explorer.html" class="page-nav-btn" style="text-align: right;">
+          <span class="page-nav-label">Tiếp theo</span>
+          <span class="page-nav-title">Trình khám phá Hộp thư &rarr;</span>
+        </a>
+      </div>
+    </main>
+
+    <!-- Table of Contents -->
+    <aside class="docs-toc">
+      <div class="toc-title">Mục lục trang</div>
+      <ul class="toc-nav">
+        <li><a href="#telemetry">Giám sát tiến trình</a></li>
+        <li><a href="#health">Chẩn đoán sức khỏe hệ thống con</a></li>
+        <li><a href="#database">Bảo trì cơ sở dữ liệu</a></li>
+        <li><a href="#troubleshooting">Hướng dẫn xử lý sự cố</a></li>
+      </ul>
+    </aside>
+  </div>
+
+  <!-- Search Modal -->
+  <div class="search-modal" id="search-modal">
+    <div class="search-dialog">
+      <div class="search-input-box">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="search-input" placeholder="Nhập từ khóa tìm kiếm..." autocomplete="off">
+        <kbd class="search-shortcut">ESC</kbd>
+      </div>
+      <div class="search-results" id="search-results"></div>
+    </div>
+  </div>
+
+  <script src="../assets/js/docs.js"></script>
+</body>
+</html>
